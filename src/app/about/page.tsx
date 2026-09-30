@@ -1,0 +1,81 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getStoredLeaders, LeaderItem } from '@/lib/dataStore';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
+
+export default function AboutPage() {
+  const settings = useSiteSettings();
+  const [leaders, setLeaders] = useState<LeaderItem[]>([]);
+  const aboutTitle = settings.aboutTitle.trim();
+  const heroTitle = /^o['’‘]zbekiston\s+respublikasi\b/i.test(aboutTitle)
+    ? aboutTitle
+    : `O‘zbekiston Respublikasi ${aboutTitle}`;
+
+  const loadData = () => {
+    fetch('/api/leaders', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Leaders unavailable');
+        const items = await response.json();
+        setLeaders(items.length > 0 ? items : getStoredLeaders());
+      })
+      .catch(() => setLeaders(getStoredLeaders()));
+  };
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('storage_updated', loadData);
+    return () => window.removeEventListener('storage_updated', loadData);
+  }, []);
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 py-12 space-y-16 font-sans">
+      <div className="text-center max-w-3xl mx-auto space-y-3">
+        <span className="text-amber-600 dark:text-amber-400 font-semibold text-xs tracking-wider uppercase">Tashkilot Haqida</span>
+        <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 dark:text-white">{heroTitle}</h1>
+        <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+          {settings.aboutSubtitle}
+        </p>
+      </div>
+
+      <section id="rahbariyat" className="scroll-mt-24 space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Litsey Rahbariyati</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Rasmiy tasdiqlangan rahbar va komandir-o'qituvchilarimiz</p>
+        </div>
+
+        {leaders.length === 0 ? (
+          <div className="bg-slate-900/5 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-10 text-center">
+            <p className="text-slate-600 dark:text-slate-400 font-semibold text-sm">Rahbariyat ma'lumotlari admin tomonidan kiritilmoqda.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {leaders.map((item) => {
+              const hasPhoto = Boolean(item.photoUrl && item.photoUrl.trim() !== '');
+              return (
+                <div key={item.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between space-y-4">
+                  <div className="flex items-start gap-4">
+                    {hasPhoto ? (
+                      <img
+                        src={item.photoUrl}
+                        alt={item.name}
+                        className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shrink-0"
+                      />
+                    ) : null}
+                    <div className="space-y-1">
+                      <h3 className={`font-black text-slate-900 dark:text-white ${hasPhoto ? 'text-base' : 'text-xl text-amber-600 dark:text-amber-400'}`}>
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">{item.role}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.spec}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}

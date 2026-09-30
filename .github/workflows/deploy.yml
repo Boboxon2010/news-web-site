@@ -1,0 +1,37 @@
+name: Test Next.js Build on GitHub Actions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: GitHub-dan kodingizni yuklab olish
+        uses: actions/checkout@v4
+
+      - name: Node.js muhitini o'rnatish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Kerakli paketlarni (node_modules) o'rnatish
+        run: npm install
+
+      - name: Next.js loyihasini ishlab chiqarishga tayyorlash (Build)
+        run: npm run build
+
+      - name: Loyihani sinov uchun fonda ishga tushirish
+        run: |
+          npm run start & 
+          echo "Next.js vaqtincha fonda ishga tushirildi!"
+          sleep 10
+
+      - name: Sayt ishlayotganini ichki tekshirish (Health Check)
+        run: |
+          curl -I http://localhost:3000 || exit 1
+          echo "Ajoyib! Sayt xatosiz start oldi."
