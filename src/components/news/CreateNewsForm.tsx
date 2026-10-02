@@ -3,6 +3,9 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStoredId, getStoredNews, NewsItem, saveStoredNews } from '@/lib/dataStore';
+import ImageUploadDropzone from '@/components/ui/ImageUploadDropzone';
+import RichTextEditor from '@/components/RichTextEditor';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 const today = () => new Date().toLocaleDateString('uz-UZ');
 const emptyForm = { title: '', category: 'Tadbir', date: today(), shortDesc: '', fullContent: '' };
@@ -34,17 +37,10 @@ export default function CreateNewsForm() {
     setImages(item.images || []);
   }, []);
 
-  const handleImages = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImages = async (files: File[]) => {
     setError('');
-    const files = Array.from(event.target.files || []);
     if (images.length + files.length > 4) {
       setError('Ko‘pi bilan 4 ta rasm biriktirish mumkin.');
-      event.target.value = '';
-      return;
-    }
-    if (files.some((file) => !file.type.startsWith('image/') || file.size > 900_000)) {
-      setError('Rasm JPG, PNG yoki WEBP bo‘lishi va hajmi 900 KB dan oshmasligi kerak.');
-      event.target.value = '';
       return;
     }
 
@@ -59,17 +55,23 @@ export default function CreateNewsForm() {
     } catch {
       setError('Rasmni o‘qishda xatolik yuz berdi.');
     }
-    event.target.value = '';
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const safeFullContent = sanitizeHtml(form.fullContent);
+    const plainFullContent = safeFullContent.replace(/<[^>]*>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim();
+    if (!plainFullContent) {
+      setError('Yangilikning to‘liq matnini kiriting.');
+      return;
+    }
     setSaving(true);
     setError('');
     const current = getStoredNews();
     const item: NewsItem = {
       id: editingId || createStoredId(),
       ...form,
+      fullContent: safeFullContent,
       images,
       files: current.find((news) => news.id === editingId)?.files || [],
     };
@@ -125,19 +127,21 @@ export default function CreateNewsForm() {
         <label className="block text-sm font-medium text-slate-700">Qisqacha mazmun
           <textarea required rows={3} value={form.shortDesc} onChange={(event) => setForm({ ...form, shortDesc: event.target.value })} className="mt-1 w-full rounded border border-slate-300 px-3 py-2.5" />
         </label>
-        <label className="block text-sm font-medium text-slate-700">To‘liq matn
-          <textarea required rows={8} value={form.fullContent} onChange={(event) => setForm({ ...form, fullContent: event.target.value })} className="mt-1 w-full rounded border border-slate-300 px-3 py-2.5" />
-        </label>
-        <label className="block text-sm font-medium text-slate-700">Rasmlar (har biri 900 KB gacha, jami 4 tagacha)
-          <input type="file" accept="image/*" multiple onChange={handleImages} className="mt-2 block w-full text-sm" />
-        </label>
+        <div className="space-y-1 text-sm font-medium text-slate-700">
+          <p>To‘liq matn</p>
+          <RichTextEditor value={form.fullContent} onChange={(fullContent) => setForm((current) => ({ ...current, fullContent }))} />
+        </div>
+        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+        <div className="space-y-2 text-sm font-medium text-slate-700">
+          <p>Rasmlar (har biri 900 KB gacha, jami 4 tagacha)</p>
+          <ImageUploadDropzone label="Rasm tanlang yoki shu yerga tashlang" multiple onFiles={handleImages} onError={setError} />
+        </div>
         {images.length > 0 && <div className="flex flex-wrap gap-3">
           {images.map((image, index) => <div key={`${image.slice(0, 40)}-${index}`} className="relative">
             <img src={image} alt={`Yangilik rasmi ${index + 1}`} className="h-20 w-24 rounded object-cover" />
             <button type="button" onClick={() => setImages((current) => current.filter((_, currentIndex) => currentIndex !== index))} aria-label={`${index + 1}-rasmni olib tashlash`} className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-700 text-white">×</button>
           </div>)}
         </div>}
-        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-5">
           <button disabled={saving} className="rounded bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{saving ? 'Saqlanmoqda…' : 'Saqlash'}</button>
           <button type="button" onClick={() => router.push('/admin/news')} className="rounded border border-slate-300 px-4 py-2.5 text-sm">Bekor qilish</button>

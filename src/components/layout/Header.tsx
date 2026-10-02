@@ -6,6 +6,7 @@ import Link from 'next/link';
 import IivLogo from '@/components/ui/IivLogo';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import ContactAction from '@/components/ContactAction';
+import AddressLink from '@/components/AddressLink';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function Header() {
             {settings.email && <ContactAction kind="email" value={settings.email} className="hover:text-amber-400 transition-colors" />}
             <span className="hidden md:inline text-slate-700">|</span>
             <span className="hidden md:inline text-slate-400">
-              📍 {settings.address || 'Xorazm viloyati, Urganch shahri'}
+              📍 <AddressLink address={settings.address || 'Xorazm viloyati, Urganch shahri'} className="hover:text-amber-400 transition-colors" />
             </span>
           </div>
 

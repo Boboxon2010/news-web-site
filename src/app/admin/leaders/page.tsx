@@ -2,12 +2,16 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { createStoredId, getStoredLeaders, LeaderItem, saveStoredLeaders } from '@/lib/dataStore';
+import ImageUploadDropzone from '@/components/ui/ImageUploadDropzone';
+import { LeaderSortMode, sortLeaders } from '@/lib/leadershipSort';
 
 const emptyForm = { name: '', role: '', spec: '', photoUrl: '' };
 
 export default function AdminLeadersPage() {
   const [leaders, setLeaders] = useState<LeaderItem[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [leaderSearch, setLeaderSearch] = useState('');
+  const [leaderSort, setLeaderSort] = useState<LeaderSortMode>('role');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [photoError, setPhotoError] = useState('');
@@ -32,6 +36,14 @@ export default function AdminLeadersPage() {
       window.removeEventListener('storage', updateLeaders);
     };
   }, []);
+
+  const visibleLeaders = sortLeaders(
+    leaders.filter((leader) => {
+      const query = leaderSearch.trim().toLocaleLowerCase();
+      return !query || `${leader.name} ${leader.role}`.toLocaleLowerCase().includes(query);
+    }),
+    leaderSort
+  );
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -65,27 +77,16 @@ export default function AdminLeadersPage() {
     setMessage('Rahbariyat ma’lumoti saqlandi.');
   };
 
-  const selectPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const selectPhoto = (files: File[]) => {
+    const file = files[0];
     setPhotoError('');
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setPhotoError('Faqat rasm faylini tanlang.');
-      event.target.value = '';
-      return;
-    }
-    if (file.size > 900_000) {
-      setPhotoError('Rasm hajmi 900 KB dan oshmasligi kerak.');
-      event.target.value = '';
-      return;
-    }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') setForm((current) => ({ ...current, photoUrl: reader.result as string }));
     };
     reader.onerror = () => setPhotoError('Rasm faylini o‘qib bo‘lmadi.');
     reader.readAsDataURL(file);
-    event.target.value = '';
   };
 
   const edit = (leader: LeaderItem) => {
@@ -126,9 +127,10 @@ export default function AdminLeadersPage() {
         <label className="text-sm font-medium text-slate-700">Qo'shimcha ma'lumot
           <textarea value={form.spec} onChange={(event) => setForm({ ...form, spec: event.target.value })} rows={3} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
         </label>
-        <label className="text-sm font-medium text-slate-700">Rasm fayli (900 KB gacha)
-          <input type="file" accept="image/*" onChange={selectPhoto} className="mt-1 block w-full rounded border border-slate-300 px-3 py-2 text-sm" />
-        </label>
+        <div className="text-sm font-medium text-slate-700">
+          <p className="mb-1">Rahbar rasmi (900 KB gacha)</p>
+          <ImageUploadDropzone label="Rasm tanlang yoki shu yerga tashlang" onFiles={selectPhoto} onError={setPhotoError} />
+        </div>
         {form.photoUrl && <div className="flex items-center gap-3 sm:col-span-2">
           <img src={form.photoUrl} alt="Tanlangan rahbar rasmi" className="h-20 w-20 rounded-full object-cover" />
           <button type="button" onClick={() => setForm({ ...form, photoUrl: '' })} className="rounded border border-slate-300 px-3 py-2 text-sm">Rasmni olib tashlash</button>
@@ -141,9 +143,22 @@ export default function AdminLeadersPage() {
         </div>
       </form>
 
+      <div className="grid gap-4 border-b border-slate-200 pb-5 sm:grid-cols-[minmax(0,1fr)_15rem] sm:items-end">
+        <label className="text-sm font-medium text-slate-700">Qidirish
+          <input value={leaderSearch} onChange={(event) => setLeaderSearch(event.target.value)} placeholder="Ism, familiya yoki lavozim" className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900" />
+        </label>
+        <label className="text-sm font-medium text-slate-700">Saralash
+          <select value={leaderSort} onChange={(event) => setLeaderSort(event.target.value as LeaderSortMode)} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900">
+            <option value="name">Alifbo bo‘yicha</option>
+            <option value="role">Lavozim bo‘yicha</option>
+          </select>
+        </label>
+      </div>
+
       <div className="divide-y divide-slate-200">
         {leaders.length === 0 && <p className="py-8 text-sm text-slate-500">Rahbariyat ma'lumotlari hali kiritilmagan.</p>}
-        {leaders.map((leader) => (
+        {leaders.length > 0 && visibleLeaders.length === 0 && <p className="py-8 text-sm text-slate-500">Qidiruv bo‘yicha rahbariyat ma’lumoti topilmadi.</p>}
+        {visibleLeaders.map((leader) => (
           <article key={leader.id} className="flex flex-wrap items-center gap-4 py-4">
             {leader.photoUrl && <img src={leader.photoUrl} alt="" className="h-14 w-14 rounded-full object-cover" />}
             <div className="min-w-0 flex-1">

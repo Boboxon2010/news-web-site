@@ -6,6 +6,7 @@ import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import NewsCardCarousel from '@/components/NewsCardCarousel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLatestNews, getStoredNews, NewsItem } from '@/lib/dataStore';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export default function HomePage() {
   const settings = useSiteSettings();
@@ -182,7 +183,7 @@ export default function HomePage() {
                 <div
                   className="prose prose-slate max-w-none text-base leading-8 dark:prose-invert [&_a]:font-semibold [&_a]:text-amber-700 [&_a]:underline dark:[&_a]:text-amber-400 [&_img]:max-w-full"
                   dangerouslySetInnerHTML={{
-                    __html: selectedNews.fullContent.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" '),
+                    __html: sanitizeHtml(selectedNews.fullContent),
                   }}
                 />
               </section>

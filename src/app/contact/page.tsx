@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getDefaultSiteSettings, getSiteSettings, SiteSettings } from '@/lib/dataStore';
 import ContactAction from '@/components/ContactAction';
+import AddressLink from '@/components/AddressLink';
 
 export default function ContactPage() {
   const [settings, setSettings] = useState<SiteSettings>(getDefaultSiteSettings);
@@ -77,7 +78,7 @@ export default function ContactPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-lg space-y-2">
             <div className="text-2xl">📍</div>
             <h3 className="font-bold text-base text-slate-900 dark:text-white">Manzilimiz</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400">{settings.address || 'Xorazm viloyati, Urganch shahri'}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400"><AddressLink address={settings.address || 'Xorazm viloyati, Urganch shahri'} className="hover:text-amber-500 hover:underline" /></p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-lg space-y-2">

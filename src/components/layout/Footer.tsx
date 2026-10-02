@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import ContactAction from '@/components/ContactAction';
+import AddressLink from '@/components/AddressLink';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -32,7 +33,7 @@ export default function Footer() {
             Kelajak posbonlari va soha mutaxassislarini tayyorlovchi zamonaviy akademik litsey.
           </p>
           <div className="text-xs text-slate-400 space-y-1">
-            <p><strong className="text-slate-200">Manzil:</strong> {settings.address || 'Xorazm viloyati, Urganch shahri'}</p>
+            <p><strong className="text-slate-200">Manzil:</strong> <AddressLink address={settings.address || 'Xorazm viloyati, Urganch shahri'} className="hover:text-amber-400 hover:underline" /></p>
             {settings.email && <p><strong className="text-slate-200">Elektron pochta:</strong> <ContactAction kind="email" value={settings.email} /></p>}
           </div>
         </div>

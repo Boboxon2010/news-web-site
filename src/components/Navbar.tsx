@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useTheme } from '@/components/ThemeProvider';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import ContactAction from '@/components/ContactAction';
+import AddressLink from '@/components/AddressLink';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +19,7 @@ export default function Navbar() {
       <div className="bg-blue-950 dark:bg-slate-900 text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="flex items-center gap-4">
-            <span>📍 {settings.address || 'Xorazm viloyati, Urganch shahri'}</span>
+            <span>📍 <AddressLink address={settings.address || 'Xorazm viloyati, Urganch shahri'} className="hover:text-amber-400" /></span>
             {settings.phone && <span className="hidden md:inline">📞 <ContactAction kind="phone" value={settings.phone} /></span>}
             {settings.email && <span className="hidden md:inline">✉️ <ContactAction kind="email" value={settings.email} /></span>}
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import { getLatestNews, getStoredNews, NewsItem } from '@/lib/dataStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export default function NewsPage() {
   const settings = useSiteSettings();
@@ -112,7 +113,7 @@ export default function NewsPage() {
             <div
               className="text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-3 prose dark:prose-invert max-w-none [&_a]:text-amber-500 [&_a]:font-bold [&_a]:underline"
               dangerouslySetInnerHTML={{
-                __html: selectedNews.fullContent.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ')
+                __html: sanitizeHtml(selectedNews.fullContent)
               }}
             />
 

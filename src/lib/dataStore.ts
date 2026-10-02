@@ -82,7 +82,15 @@ const readStoredValue = <T,>(key: string, fallback: T): T => {
 
 const writeStoredValue = <T,>(key: string, value: T): void => {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    const quotaExceeded = error instanceof DOMException && (
+      error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014
+    );
+    if (!quotaExceeded) throw error;
+    console.warn(`Local storage quota exceeded for "${key}"; keeping existing data and using server data.`);
+  }
   window.dispatchEvent(new Event('datastore-update'));
   window.dispatchEvent(new Event('storage_updated'));
 };
