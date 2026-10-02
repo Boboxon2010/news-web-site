@@ -136,7 +136,7 @@ export default function AdminLeadersPage() {
         {photoError && <p role="alert" className="text-sm text-red-700 sm:col-span-2">{photoError}</p>}
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <button className="rounded bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700">{editingId ? 'Saqlash' : "Qo'shish"}</button>
-          {editingId && <button type="button" onClick={() => { setEditingId(null); setForm(emptyForm); }} className="rounded border border-slate-300 px-4 py-2.5 text-sm">Bekor qilish</button>}
+          {editingId && <button type="button" onClick={() => { setEditingId(null); setForm(emptyForm); }} className="rounded border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-800 hover:bg-slate-100">Bekor qilish</button>}
           {message && <span role="status" className="text-sm text-emerald-700">{message}</span>}
         </div>
       </form>
@@ -151,7 +151,7 @@ export default function AdminLeadersPage() {
               <p className="text-sm text-slate-600">{leader.role}</p>
               {leader.spec && <p className="mt-1 text-sm text-slate-500">{leader.spec}</p>}
             </div>
-            <button type="button" onClick={() => edit(leader)} className="rounded border border-slate-300 px-3 py-2 text-sm">Tahrirlash</button>
+            <button type="button" onClick={() => edit(leader)} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-100">Tahrirlash</button>
             <button type="button" onClick={() => remove(leader.id)} className="rounded border border-red-200 px-3 py-2 text-sm text-red-700">O'chirish</button>
           </article>
         ))}
