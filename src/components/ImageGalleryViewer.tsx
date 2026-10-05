@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface ImageGalleryViewerProps {
   images: string[];
@@ -102,9 +103,14 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
           className="relative w-full h-64 sm:h-80 md:h-96 cursor-pointer flex items-center justify-center overflow-hidden"
           onClick={() => setIsOpen(true)}
         >
-          <img
+          <Image
             src={images[currentIndex]}
             alt={`${altTitle} - ${currentIndex + 1}`}
+            width={1600}
+            height={1200}
+            quality={75}
+            loading="lazy"
+            unoptimized
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-2 backdrop-blur-[2px]">
@@ -170,7 +176,7 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+              <Image src={img} alt={`Thumb ${idx}`} width={64} height={64} quality={75} loading="lazy" unoptimized className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
@@ -252,9 +258,14 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
             )}
 
             <div className="max-w-full max-h-full flex items-center justify-center overflow-auto p-4">
-              <img
+              <Image
                 src={images[currentIndex]}
                 alt="Fullscreen View"
+                width={1600}
+                height={1200}
+                quality={75}
+                loading="lazy"
+                unoptimized
                 style={{
                   transform: `scale(${scale}) rotate(${rotation}deg)`,
                   transition: 'transform 0.2s ease-out',

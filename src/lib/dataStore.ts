@@ -31,6 +31,8 @@ export interface NewsItem {
   files?: NewsFile[];
 }
 
+export type NewsSummary = Pick<NewsItem, 'id' | 'title' | 'category' | 'date' | 'shortDesc' | 'images'>;
+
 export interface LeaderItem {
   id: string;
   name: string;
@@ -98,6 +100,9 @@ const writeStoredValue = <T,>(key: string, value: T): void => {
 let cachedNews: NewsItem[] | null = null;
 let cachedNewsAt = 0;
 let newsRequest: Promise<NewsItem[]> | null = null;
+let cachedNewsSummary: NewsSummary[] | null = null;
+let cachedNewsSummaryAt = 0;
+let newsSummaryRequest: Promise<NewsSummary[]> | null = null;
 let lastVisitSubmission = '';
 
 export async function getLatestNews(refresh = false): Promise<NewsItem[]> {
@@ -121,6 +126,41 @@ export async function getLatestNews(refresh = false): Promise<NewsItem[]> {
     return cachedNews;
   } finally {
     newsRequest = null;
+  }
+}
+
+export function getStoredNewsSummary(): NewsSummary[] {
+  return getStoredNews().map(({ id, title, category, date, shortDesc, images }) => ({
+    id,
+    title,
+    category,
+    date,
+    shortDesc,
+    images,
+  }));
+}
+
+export async function getLatestNewsSummary(refresh = false): Promise<NewsSummary[]> {
+  if (!refresh && cachedNewsSummary && Date.now() - cachedNewsSummaryAt < 10000) return cachedNewsSummary;
+  if (newsSummaryRequest) return newsSummaryRequest;
+
+  newsSummaryRequest = (async () => {
+    try {
+      const response = await fetch('/api/news/summary', { cache: 'no-store' });
+      if (response.ok) {
+        const items = await response.json();
+        return Array.isArray(items) ? items as NewsSummary[] : getStoredNewsSummary();
+      }
+    } catch {}
+    return getStoredNewsSummary();
+  })();
+
+  try {
+    cachedNewsSummary = await newsSummaryRequest;
+    cachedNewsSummaryAt = Date.now();
+    return cachedNewsSummary;
+  } finally {
+    newsSummaryRequest = null;
   }
 }
 

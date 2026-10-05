@@ -1,20 +1,47 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag, unstable_cache } from 'next/cache';
 import { query } from '@/lib/db';
+
+export const revalidate = 3600;
+
+const getCachedNewsRows = unstable_cache(
+  async () => {
+    const result = await query(`
+      SELECT
+        n.id,
+        n.title,
+        n.category,
+        n.news_date,
+        n.short_desc,
+        n.full_content,
+        COALESCE((
+          SELECT json_agg(image.image_url ORDER BY image.display_order, image.id)
+          FROM news_images AS image
+          WHERE image.news_id = n.id
+        ), '[]'::json) AS images,
+        COALESCE((
+          SELECT json_agg(json_build_object(
+            'id', file.id,
+            'file_name', file.file_name,
+            'file_url', file.file_url,
+            'file_type', file.file_type
+          ) ORDER BY file.id)
+          FROM news_files AS file
+          WHERE file.news_id = n.id
+        ), '[]'::json) AS files
+      FROM news n
+      ORDER BY n.created_at DESC
+    `);
+    return result.rows;
+  },
+  ['news-list-v1'],
+  { revalidate: 3600, tags: ['news'] }
+);
 
 export async function GET() {
   try {
-    const newsRes = await query(`
-      SELECT n.*, 
-        COALESCE(json_agg(DISTINCT i.*) FILTER (WHERE i.id IS NOT NULL), '[]') as images,
-        COALESCE(json_agg(DISTINCT f.*) FILTER (WHERE f.id IS NOT NULL), '[]') as files
-      FROM news n
-      LEFT JOIN news_images i ON n.id = i.news_id
-      LEFT JOIN news_files f ON n.id = f.news_id
-      GROUP BY n.id
-      ORDER BY n.created_at DESC
-    `);
-
-    const newsData = newsRes.rows.map((row: any) => ({
+    const rows = await getCachedNewsRows();
+    const newsData = rows.map((row: any) => ({
       id: row.id.toString(),
       title: row.title,
       category: row.category,
@@ -67,6 +94,7 @@ export async function POST(req: Request) {
       }
     }
 
+    revalidateTag('news');
     return NextResponse.json({ success: true, id: newsId });
   } catch (error) {
     return NextResponse.json({ error: 'Saqlashda xatolik bo\'ldi' }, { status: 500 });
@@ -97,6 +125,7 @@ export async function PUT(req: Request) {
       await query('INSERT INTO news_files (news_id, file_name, file_url, file_type) VALUES ($1, $2, $3, $4)', [id, file.name, file.dataUrl, file.type]);
     }
 
+    revalidateTag('news');
     return NextResponse.json({ success: true, id });
   } catch {
     return NextResponse.json({ error: 'Yangilikni yangilashda xatolik yuz berdi' }, { status: 500 });
@@ -110,6 +139,7 @@ export async function DELETE(req: Request) {
     if (!id) return NextResponse.json({ error: 'ID kiritilmadi' }, { status: 400 });
 
     await query(`DELETE FROM news WHERE id = $1`, [id]);
+    revalidateTag('news');
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'O\'chirishda xatolik' }, { status: 500 });

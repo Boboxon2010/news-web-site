@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { getStoredLeaders, LeaderItem } from '@/lib/dataStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { sortLeaders } from '@/lib/leadershipSort';
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function AboutPage() {
   const settings = useSiteSettings();
   const [leaders, setLeaders] = useState<LeaderItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [leaderSearch, setLeaderSearch] = useState('');
   const [leaderSort, setLeaderSort] = useState<'name' | 'role'>('role');
   const aboutTitle = settings.aboutTitle.trim();
@@ -22,10 +24,16 @@ export default function AboutPage() {
         const items = await response.json();
         setLeaders(items.length > 0 ? items : getStoredLeaders());
       })
-      .catch(() => setLeaders(getStoredLeaders()));
+      .catch(() => setLeaders(getStoredLeaders()))
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
+    const cachedLeaders = getStoredLeaders();
+    if (cachedLeaders.length > 0) {
+      setLeaders(cachedLeaders);
+      setIsLoading(false);
+    }
     loadData();
     window.addEventListener('storage_updated', loadData);
     return () => window.removeEventListener('storage_updated', loadData);
@@ -55,7 +63,9 @@ export default function AboutPage() {
           <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Rasmiy tasdiqlangan rahbar va komandir-o'qituvchilarimiz</p>
         </div>
 
-        {leaders.length === 0 ? (
+        {isLoading ? (
+          <LoadingIndicator />
+        ) : leaders.length === 0 ? (
           <div className="bg-slate-900/5 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-10 text-center">
             <p className="text-slate-600 dark:text-slate-400 font-semibold text-sm">Rahbariyat ma'lumotlari admin tomonidan kiritilmoqda.</p>
           </div>

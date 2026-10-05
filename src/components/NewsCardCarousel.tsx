@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 
 interface NewsCardCarouselProps {
   images: string[];
@@ -50,12 +51,15 @@ export default function NewsCardCarousel({ images, title, onOpenNews }: NewsCard
       >
         {images.map((image, index) => (
           index === currentIndex ? (
-            <img
+            <Image
               key={`${image.slice(0, 40)}-${index}`}
               src={image}
               alt={`${title} — ${index + 1}-rasm`}
+              width={960}
+              height={540}
+              quality={75}
               loading="lazy"
-              decoding="async"
+              unoptimized
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : null

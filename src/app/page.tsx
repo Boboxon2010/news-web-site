@@ -1,24 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import NewsCardCarousel from '@/components/NewsCardCarousel';
+import LoadingIndicator from '@/components/LoadingIndicator';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { getLatestNews, getStoredNews, NewsItem } from '@/lib/dataStore';
+import { getLatestNewsSummary, getStoredNewsSummary, NewsItem, NewsSummary } from '@/lib/dataStore';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export default function HomePage() {
   const settings = useSiteSettings();
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<NewsSummary[]>([]);
+  const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [selectedGallery, setSelectedGallery] = useState<string[]>([]);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [isNewsDetailLoading, setIsNewsDetailLoading] = useState(false);
+  const [newsDetailError, setNewsDetailError] = useState('');
+  const newsDetailRequest = useRef(0);
 
   useEffect(() => {
     const updateNews = (refresh = false) => {
-      if (refresh) setNews(getStoredNews());
-      void getLatestNews(refresh).then(setNews);
+      const cachedNews = getStoredNewsSummary();
+      if (cachedNews.length > 0) {
+        setNews(cachedNews);
+        setIsNewsLoading(false);
+      }
+      void getLatestNewsSummary(refresh)
+        .then(setNews)
+        .catch(() => setNews(getStoredNewsSummary()))
+        .finally(() => setIsNewsLoading(false));
     };
     void updateNews();
     const refreshNews = () => updateNews(true);
@@ -36,7 +48,9 @@ export default function HomePage() {
     document.body.style.overflow = 'hidden';
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !document.querySelector('[aria-label$="galereyasi"]')) {
+        newsDetailRequest.current += 1;
         setSelectedNews(null);
+        setIsNewsDetailLoading(false);
       }
     };
     window.addEventListener('keydown', handleEscape);
@@ -45,6 +59,31 @@ export default function HomePage() {
       window.removeEventListener('keydown', handleEscape);
     };
   }, [selectedNews]);
+
+  const openNews = async (item: NewsSummary) => {
+    const requestId = ++newsDetailRequest.current;
+    setSelectedNews({ ...item, fullContent: '', files: [] });
+    setNewsDetailError('');
+    setIsNewsDetailLoading(true);
+
+    try {
+      const response = await fetch(`/api/news/${encodeURIComponent(item.id)}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('Yangilik matnini yuklab bo‘lmadi.');
+      const detail = await response.json() as NewsItem;
+      if (newsDetailRequest.current === requestId) setSelectedNews(detail);
+    } catch {
+      if (newsDetailRequest.current === requestId) setNewsDetailError('Yangilik matnini yuklashda xatolik yuz berdi.');
+    } finally {
+      if (newsDetailRequest.current === requestId) setIsNewsDetailLoading(false);
+    }
+  };
+
+  const closeSelectedNews = () => {
+    newsDetailRequest.current += 1;
+    setSelectedNews(null);
+    setIsNewsDetailLoading(false);
+    setNewsDetailError('');
+  };
 
   const handleOpenGallery = (images?: string[]) => {
     if (images && images.length > 0) {
@@ -59,7 +98,7 @@ export default function HomePage() {
       <section className="bg-slate-900 text-white py-20 px-6 text-center relative overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-[5rem_minmax(0,1fr)_5rem] sm:grid-cols-[7rem_minmax(0,1fr)_7rem] lg:grid-cols-[10rem_minmax(0,1fr)_10rem] items-center gap-3 sm:gap-6 lg:gap-10">
           <div className="relative mx-auto aspect-square w-full">
-            <Image src="/images/gerb.webp" alt="O‘zbekiston Respublikasi Davlat gerbi" fill priority unoptimized className="object-contain" />
+            <Image src="/images/gerb.webp" alt="O‘zbekiston Respublikasi Davlat gerbi" width={160} height={160} quality={75} loading="lazy" sizes="(max-width: 640px) 80px, (max-width: 1024px) 112px, 160px" className="h-full w-full object-contain" />
           </div>
           <div className="space-y-4">
             <h1 className="text-xl sm:text-3xl lg:text-5xl font-extrabold tracking-tight">
@@ -75,7 +114,7 @@ export default function HomePage() {
             )}
           </div>
           <div className="relative mx-auto aspect-square w-full">
-            <Image src="/images/IIV_logo_trimmed.png" alt="Ichki ishlar vazirligi logotipi" fill priority unoptimized className="object-contain" />
+            <Image src="/images/IIV_logo_trimmed.png" alt="Ichki ishlar vazirligi logotipi" width={160} height={160} quality={75} loading="lazy" sizes="(max-width: 640px) 80px, (max-width: 1024px) 112px, 160px" className="h-full w-full object-contain" />
           </div>
         </div>
       </section>
@@ -86,7 +125,9 @@ export default function HomePage() {
           So'nggi Yangiliklar va E'lonlar
         </h2>
 
-        {news.length === 0 ? (
+        {isNewsLoading ? (
+          <LoadingIndicator className="min-h-48" />
+        ) : news.length === 0 ? (
           <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
             Hozircha yangiliklar mavjud emas.
           </div>
@@ -100,12 +141,12 @@ export default function HomePage() {
                 <article key={item.id} className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                   <button
                     type="button"
-                    onClick={() => setSelectedNews(item)}
+                    onClick={() => { void openNews(item); }}
                     aria-label={`Yangilikni to‘liq ochish: ${item.title}`}
                     className="absolute inset-0 z-0 rounded-2xl"
                   />
                   <div className="relative z-10 pointer-events-none">
-                    {hasImages && <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => setSelectedNews(item)} />}
+                    {hasImages && <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => { void openNews(item); }} />}
 
                     <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
                       <span className="bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 font-semibold px-2.5 py-0.5 rounded-md">
@@ -144,7 +185,7 @@ export default function HomePage() {
           role="dialog"
           aria-modal="true"
           aria-label={`Yangilik: ${selectedNews.title}`}
-          onClick={(event) => { if (event.target === event.currentTarget) setSelectedNews(null); }}
+          onClick={(event) => { if (event.target === event.currentTarget) closeSelectedNews(); }}
           className="fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100"
         >
           <header className="sticky top-0 z-30 shrink-0 border-b border-slate-800 bg-slate-950 text-white">
@@ -156,7 +197,7 @@ export default function HomePage() {
                   <p className="text-[10px] text-slate-400">Yangilik va e’lon</p>
                 </div>
               </div>
-              <button type="button" onClick={() => setSelectedNews(null)} aria-label="Yangilikni yopish" title="Yopish (Esc)" className="flex h-10 w-10 items-center justify-center border border-slate-700 text-lg text-slate-300 transition-colors hover:border-amber-400 hover:text-white">×</button>
+              <button type="button" onClick={closeSelectedNews} aria-label="Yangilikni yopish" title="Yopish (Esc)" className="flex h-10 w-10 items-center justify-center border border-slate-700 text-lg text-slate-300 transition-colors hover:border-amber-400 hover:text-white">×</button>
             </div>
           </header>
 
@@ -180,12 +221,16 @@ export default function HomePage() {
 
               <section className="max-w-4xl border-l-2 border-amber-500 pl-5 sm:pl-7">
                 <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Maqola</h2>
-                <div
-                  className="prose prose-slate max-w-none text-base leading-8 dark:prose-invert [&_a]:font-semibold [&_a]:text-amber-700 [&_a]:underline dark:[&_a]:text-amber-400 [&_img]:max-w-full"
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(selectedNews.fullContent),
-                  }}
-                />
+                {isNewsDetailLoading ? (
+                  <p role="status" className="text-sm text-slate-500 dark:text-slate-400">Yangilik matni yuklanmoqda...</p>
+                ) : newsDetailError ? (
+                  <p role="alert" className="text-sm text-red-600 dark:text-red-400">{newsDetailError}</p>
+                ) : (
+                  <div
+                    className="prose prose-slate max-w-none text-base leading-8 dark:prose-invert [&_a]:font-semibold [&_a]:text-amber-700 [&_a]:underline dark:[&_a]:text-amber-400 [&_img]:max-w-full"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedNews.fullContent) }}
+                  />
+                )}
               </section>
             </article>
 

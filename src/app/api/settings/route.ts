@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag, unstable_cache } from 'next/cache';
 import { query } from '@/lib/db';
+
+export const revalidate = 3600;
 
 const defaultPageText = {
   aboutTitle: "O'zbekiston Respublikasi Ichki ishlar vazirligi Xorazm akademik litseyi tarixi va maqsadi",
@@ -8,10 +11,25 @@ const defaultPageText = {
   newsSubtitle: "Litseyimizdagi barcha rasmiy e'lonlar, tadbirlar hamda muhim yangiliklar minbari.",
 };
 
+const getCachedSettingsRow = unstable_cache(
+  async () => {
+    const result = await query(`
+      SELECT hero_title, hero_subtitle, badge_text, about_title, about_subtitle,
+        news_title, news_subtitle, address, phone, email, working_hours, postal_code
+      FROM site_settings
+      ORDER BY id DESC
+      LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  },
+  ['site-settings-row-v1'],
+  { revalidate: 3600, tags: ['site-settings'] }
+);
+
 export async function GET() {
   try {
-    const res = await query(`SELECT * FROM site_settings ORDER BY id DESC LIMIT 1`);
-    if (res.rows.length === 0) {
+    const row = await getCachedSettingsRow();
+    if (!row) {
       return NextResponse.json({
         heroTitle: "O'zbekiston Respublikasi IIV Xorazm akademik litseyi",
         heroSubtitle: "Kelajak posbonlari va bilimli yoshlarni tarbiyalash maskani.",
@@ -25,7 +43,6 @@ export async function GET() {
       });
     }
 
-    const row = res.rows[0];
     return NextResponse.json({
       heroTitle: row.hero_title,
       heroSubtitle: row.hero_subtitle,
@@ -66,6 +83,7 @@ export async function POST(req: Request) {
       );
     }
 
+    revalidateTag('site-settings');
     return NextResponse.json({ success: true, postalCode: postalCode || '' });
   } catch (error) {
     return NextResponse.json({ error: 'Sozlamalarni saqlashda xatolik' }, { status: 500 });

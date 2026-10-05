@@ -33,9 +33,13 @@ export function useSiteSettings() {
   const [settings, setSettings] = useState(getDefaultSiteSettings);
 
   useEffect(() => {
+    let isMounted = true;
     const updateSettings = async (refresh = false) => {
       if (refresh) setSettings(getSiteSettings());
-      setSettings(await loadSiteSettings(refresh));
+      try {
+        const nextSettings = await loadSiteSettings(refresh);
+        if (isMounted) setSettings(nextSettings);
+      } catch {}
     };
 
     setSettings(getSiteSettings());
@@ -46,6 +50,7 @@ export function useSiteSettings() {
     window.addEventListener('storage', refreshSettings);
 
     return () => {
+      isMounted = false;
       window.removeEventListener('datastore-update', refreshSettings);
       window.removeEventListener('storage', refreshSettings);
     };
