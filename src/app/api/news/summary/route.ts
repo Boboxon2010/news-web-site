@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 import { NewsSummary } from '@/lib/dataStore';
 
 export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const getCachedNewsSummaries = unstable_cache(
   async () => {
