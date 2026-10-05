@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { getSafeImageSource } from '@/lib/imageSource';
 
 interface ImageGalleryViewerProps {
   images: string[];
@@ -104,7 +105,7 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
           onClick={() => setIsOpen(true)}
         >
           <Image
-            src={images[currentIndex]}
+            src={getSafeImageSource(images[currentIndex]) || '/images/IIV_logo.png'}
             alt={`${altTitle} - ${currentIndex + 1}`}
             width={1600}
             height={1200}
@@ -176,7 +177,7 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              <Image src={img} alt={`Thumb ${idx}`} width={64} height={64} quality={75} loading="lazy" unoptimized className="w-full h-full object-cover" />
+              <Image src={getSafeImageSource(img) || '/images/IIV_logo.png'} alt={`Thumb ${idx}`} width={64} height={64} quality={75} loading="lazy" unoptimized className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
@@ -259,7 +260,7 @@ export default function ImageGalleryViewer({ images, altTitle = 'Rasm', classNam
 
             <div className="max-w-full max-h-full flex items-center justify-center overflow-auto p-4">
               <Image
-                src={images[currentIndex]}
+                src={getSafeImageSource(images[currentIndex]) || '/images/IIV_logo.png'}
                 alt="Fullscreen View"
                 width={1600}
                 height={1200}

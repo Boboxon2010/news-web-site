@@ -19,7 +19,7 @@ export default function AdminLeadersPage() {
   useEffect(() => {
     const updateLeaders = async () => {
       try {
-        const response = await fetch('/api/leaders', { cache: 'no-store' });
+        const response = await fetch('/api/leaders?includePhotos=true', { cache: 'no-store' });
         if (response.ok) {
           const items = await response.json();
           setLeaders(items.length > 0 ? items : getStoredLeaders());

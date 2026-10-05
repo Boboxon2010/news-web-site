@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Image from 'next/image';
+import { getSafeImageSource } from '@/lib/imageSource';
 
 interface NewsCardCarouselProps {
   images: string[];
@@ -50,10 +51,10 @@ export default function NewsCardCarousel({ images, title, onOpenNews }: NewsCard
         className="absolute inset-0 z-0 block h-full w-full"
       >
         {images.map((image, index) => (
-          index === currentIndex ? (
+          index === currentIndex && getSafeImageSource(image) ? (
             <Image
-              key={`${image.slice(0, 40)}-${index}`}
-              src={image}
+              key={`${(image || '').slice(0, 40)}-${index}`}
+              src={getSafeImageSource(image) || '/images/IIV_logo.png'}
               alt={`${title} — ${index + 1}-rasm`}
               width={960}
               height={540}

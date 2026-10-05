@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { getStoredLeaders, LeaderItem } from '@/lib/dataStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -93,9 +94,14 @@ export default function AboutPage() {
                 <div key={item.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between space-y-4">
                   <div className="flex items-start gap-4">
                     {hasPhoto ? (
-                      <img
+                      <Image
                         src={item.photoUrl}
                         alt={item.name}
+                        width={80}
+                        height={80}
+                        quality={75}
+                        loading="lazy"
+                        unoptimized={item.photoUrl.startsWith('data:')}
                         className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shrink-0"
                       />
                     ) : null}

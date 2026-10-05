@@ -137,7 +137,7 @@ export default function CreateNewsForm() {
           <ImageUploadDropzone label="Rasm tanlang yoki shu yerga tashlang" multiple onFiles={handleImages} onError={setError} />
         </div>
         {images.length > 0 && <div className="flex flex-wrap gap-3">
-          {images.map((image, index) => <div key={`${image.slice(0, 40)}-${index}`} className="relative">
+          {images.map((image, index) => <div key={`${(image || '').slice(0, 40)}-${index}`} className="relative">
             <img src={image} alt={`Yangilik rasmi ${index + 1}`} className="h-20 w-24 rounded object-cover" />
             <button type="button" onClick={() => setImages((current) => current.filter((_, currentIndex) => currentIndex !== index))} aria-label={`${index + 1}-rasmni olib tashlash`} className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-700 text-white">×</button>
           </div>)}

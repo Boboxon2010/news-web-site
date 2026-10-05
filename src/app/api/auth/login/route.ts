@@ -8,7 +8,6 @@ export async function POST(req: Request) {
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
-    // Rate Limit Tekshiruvi (1 daqiqada maksimum 5 ta xato urinish)
     if (!checkRateLimit(ip, 5, 60000)) {
       return NextResponse.json(
         { success: false, message: 'Juda ko\'p urinish amalga oshirildi. 1 daqiqadan so\'ng qayta urinib ko\'ring.' },
@@ -26,27 +25,26 @@ export async function POST(req: Request) {
 
     const cleanId = identifier.trim().toLowerCase();
 
-    // SQL Injection xavfsiz parametri bor so'rov
     let admin = null;
     try {
       const res = await query(
-        `SELECT * FROM admins
-         WHERE LOWER(username) = $1 OR LOWER(email) = $1 OR REPLACE(phone, ' ', '') = $1
+        `SELECT * FROM admins 
+         WHERE LOWER(username) = $1 OR LOWER(email) = $1 OR REPLACE(phone, ' ', '') = $1 
          LIMIT 1`,
         [cleanId]
       );
       admin = res.rows[0] ?? null;
-    } catch {
-      // Local development can use the configured bootstrap account without PostgreSQL.
+    } catch (dbErr: any) {
+      console.error('Database query error:', dbErr.message);
     }
 
     let isPasswordCorrect = false;
 
-    if (admin) {
+    if (admin && admin.password_hash) {
       if (admin.password_hash.startsWith('$2a$') || admin.password_hash.startsWith('$2b$')) {
         isPasswordCorrect = await bcrypt.compare(password, admin.password_hash);
       } else {
-        isPasswordCorrect = admin.username === 'admin' && admin.password_hash === 'admin' && password === 'admin123';
+        isPasswordCorrect = admin.password_hash === password;
       }
     }
 
@@ -54,14 +52,13 @@ export async function POST(req: Request) {
     const fallbackPassword = process.env.ADMIN_PASSWORD || 'admin123';
     if (!isPasswordCorrect && !admin && cleanId === fallbackUsername.toLowerCase() && password === fallbackPassword) {
       isPasswordCorrect = true;
-      admin = { username: fallbackUsername, role: 'superadmin' };
+      admin = { id: 1, username: fallbackUsername, role: 'superadmin' };
     }
 
     if (isPasswordCorrect && admin) {
-      const token = await signJwtToken({ id: admin.id, username: admin.username, role: 'superadmin' });
+      const token = await signJwtToken({ id: admin.id || 1, username: admin.username || 'admin', role: 'superadmin' });
       const response = NextResponse.json({ success: true, message: 'Tizimga kirildi' });
 
-      // HttpOnly Secure Cookie saqlash
       response.cookies.set('admin_session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -74,7 +71,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: false, message: 'Login yoki parol noto\'g\'ri' }, { status: 401 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Serverda xatolik yuz berdi' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Login API Error:', error);
+    return NextResponse.json({ success: false, message: 'Serverda xatolik yuz berdi: ' + (error.message || '') }, { status: 500 });
   }
 }
