@@ -42,10 +42,20 @@ const initDb = async () => {
   }
 };
 
-const databaseReady = initDb();
+let databaseReady: Promise<void> | null = null;
+
+const ensureDatabaseReady = (): Promise<void> => {
+  if (!databaseReady) {
+    databaseReady = initDb().catch((error) => {
+      databaseReady = null;
+      throw error;
+    });
+  }
+  return databaseReady;
+};
 
 export const query = async (text: string, params?: any[]): Promise<QueryResult<any>> => {
-  await databaseReady;
+  await ensureDatabaseReady();
   return pool.query(text, params);
 };
 
