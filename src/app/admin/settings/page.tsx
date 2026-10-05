@@ -129,16 +129,16 @@ export default function AdminSettingsPage() {
         </header>
         <form onSubmit={submitCredentials} className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-700">Joriy parol
-            <input type="password" autoComplete="current-password" required value={credentials.currentPassword} onChange={(event) => updateCredentials('currentPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+            <input type="password" autoComplete="current-password" required value={credentials.currentPassword} onChange={(event) => updateCredentials('currentPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500 caret-slate-900" />
           </label>
           <label className="text-sm font-medium text-slate-700">Yangi login (ixtiyoriy)
-            <input type="text" autoComplete="username" minLength={3} maxLength={32} value={credentials.newUsername} onChange={(event) => updateCredentials('newUsername', event.target.value)} placeholder={username || 'Yangi login'} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+            <input type="text" autoComplete="username" minLength={3} maxLength={32} value={credentials.newUsername} onChange={(event) => updateCredentials('newUsername', event.target.value)} placeholder={username || 'Yangi login'} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500 caret-slate-900" />
           </label>
           <label className="text-sm font-medium text-slate-700">Yangi parol (ixtiyoriy)
-            <input type="password" autoComplete="new-password" value={credentials.newPassword} onChange={(event) => updateCredentials('newPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+            <input type="password" autoComplete="new-password" value={credentials.newPassword} onChange={(event) => updateCredentials('newPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500 caret-slate-900" />
           </label>
           <label className="text-sm font-medium text-slate-700">Yangi parolni tasdiqlash
-            <input type="password" autoComplete="new-password" value={credentials.confirmPassword} onChange={(event) => updateCredentials('confirmPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+            <input type="password" autoComplete="new-password" value={credentials.confirmPassword} onChange={(event) => updateCredentials('confirmPassword', event.target.value)} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500 caret-slate-900" />
           </label>
           <p className="text-xs text-slate-500 sm:col-span-2">Yangi parol kamida 12 belgidan iborat bo‘lib, katta-kichik harf, raqam va maxsus belgini o‘z ichiga olishi kerak. Faqat loginni yoki faqat parolni ham o‘zgartirish mumkin.</p>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
