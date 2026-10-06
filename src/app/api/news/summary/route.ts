@@ -6,6 +6,20 @@ import { NewsSummary } from '@/lib/dataStore';
 export const revalidate = 3600;
 export const dynamic = 'force-dynamic';
 
+const normalizeImages = (images: unknown): string[] => {
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((img) => {
+      if (typeof img === 'string') return img.trim();
+      if (img && typeof img === 'object' && 'image_url' in img && typeof img.image_url === 'string') {
+        return img.image_url.trim();
+      }
+      return null;
+    })
+    .filter((img): img is string => Boolean(img && img.length > 0));
+};
+
 const getCachedNewsSummaries = unstable_cache(
   async () => {
     const result = await query(`
@@ -30,7 +44,7 @@ const getCachedNewsSummaries = unstable_cache(
       category: row.category,
       date: row.news_date,
       shortDesc: row.short_desc,
-      images: row.images,
+      images: normalizeImages(row.images),
     } satisfies NewsSummary));
   },
   ['news-card-summaries-v1'],

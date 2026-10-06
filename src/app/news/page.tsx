@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
-import { getLatestNews, getStoredNews, NewsItem } from '@/lib/dataStore';
+import { getLatestNews, getStoredNews, getNewsCoverImage, NewsItem } from '@/lib/dataStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
@@ -48,7 +48,7 @@ export default function NewsPage() {
             <div>
               <div className="relative h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <img
-                  src={item.images?.[0] || '/images/IIV_logo.png'}
+                  src={getNewsCoverImage(item.images)}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

@@ -6,7 +6,7 @@ import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import NewsCardCarousel from '@/components/NewsCardCarousel';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { getLatestNewsSummary, getStoredNewsSummary, NewsItem, NewsSummary } from '@/lib/dataStore';
+import { getLatestNewsSummary, getStoredNewsSummary, getNewsCoverImage, NewsItem, NewsSummary } from '@/lib/dataStore';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export default function HomePage() {
@@ -136,6 +136,7 @@ export default function HomePage() {
             {news.map((item) => {
               const imagesList = item.images || [];
               const hasImages = imagesList.length > 0;
+              const primaryImage = getNewsCoverImage(imagesList);
 
               return (
                 <article key={item.id} className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
@@ -146,7 +147,13 @@ export default function HomePage() {
                     className="absolute inset-0 z-0 rounded-2xl"
                   />
                   <div className="relative z-10 pointer-events-none">
-                    {hasImages && <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => { void openNews(item); }} />}
+                    {hasImages ? (
+                      <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => { void openNews(item); }} />
+                    ) : (
+                      <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <Image src={primaryImage} alt={item.title} width={960} height={540} quality={75} loading="lazy" unoptimized className="h-full w-full object-cover" />
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
                       <span className="bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 font-semibold px-2.5 py-0.5 rounded-md">

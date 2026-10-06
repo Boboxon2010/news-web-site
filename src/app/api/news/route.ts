@@ -4,6 +4,20 @@ import { query } from '@/lib/db';
 
 export const revalidate = 3600;
 
+const normalizeImages = (images: unknown): string[] => {
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((img) => {
+      if (typeof img === 'string') return img.trim();
+      if (img && typeof img === 'object' && 'image_url' in img && typeof img.image_url === 'string') {
+        return img.image_url.trim();
+      }
+      return null;
+    })
+    .filter((img): img is string => Boolean(img && img.length > 0));
+};
+
 const getCachedNewsRows = unstable_cache(
   async () => {
     const result = await query(`
@@ -48,7 +62,7 @@ export async function GET() {
       date: row.news_date,
       shortDesc: row.short_desc,
       fullContent: row.full_content,
-      images: Array.isArray(row.images) ? row.images.map((img: any) => img.image_url) : [],
+      images: normalizeImages(row.images),
       files: Array.isArray(row.files) ? row.files.map((file: any) => ({
         id: file.id.toString(),
         name: file.file_name,

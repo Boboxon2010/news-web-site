@@ -33,6 +33,11 @@ export interface NewsItem {
 
 export type NewsSummary = Pick<NewsItem, 'id' | 'title' | 'category' | 'date' | 'shortDesc' | 'images'>;
 
+export function getNewsCoverImage(images?: string[]): string {
+  const firstImage = Array.isArray(images) ? images.find((image) => typeof image === 'string' && image.trim().length > 0) : null;
+  return firstImage ? firstImage : '/images/IIV_logo.png';
+}
+
 export interface LeaderItem {
   id: string;
   name: string;
