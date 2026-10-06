@@ -229,7 +229,10 @@ function localizeDocument(language: SiteLanguage) {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentElement;
-      if (!parent || parent.closest('[data-no-translate],script,style,textarea,input,select,option,code,pre')) return NodeFilter.FILTER_REJECT;
+      const isOptionLabel = Boolean(parent?.closest('option'));
+      if (!parent || parent.closest('[data-no-translate],script,style,textarea,input,code,pre') || (!isOptionLabel && parent.closest('select'))) {
+        return NodeFilter.FILTER_REJECT;
+      }
       return NodeFilter.FILTER_ACCEPT;
     },
   });
