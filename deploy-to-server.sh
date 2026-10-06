@@ -13,7 +13,12 @@ REMOTE_DIR="/home/ubuntu/Web-site/litsey-web"
 
 echo "🚀 Faqat kod fayllarini (config va bazalarsiz) serverga yuborish boshlandi..."
 
-# rsync orqali config va bazaga tegishli fayllarni to'liq chetlab o'tib yuborish
+# 0. Serverda kerakli papka mavjudligini tekshirish va yaratish
+echo "📁 Serverda papka mavjudligi tekshirilmoqda..."
+ssh -i $SSH_KEY -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "mkdir -p $REMOTE_DIR"
+
+# 1. rsync orqali config va bazaga tegishli fayllarni to'liq chetlab o'tib yuborish
+echo "📦 Fayllar serverga nusxalanmoqda..."
 rsync -avz -e "ssh -i $SSH_KEY -p $SERVER_PORT" \
   --exclude 'node_modules' \
   --exclude '.next' \
@@ -28,7 +33,7 @@ rsync -avz -e "ssh -i $SSH_KEY -p $SERVER_PORT" \
   --exclude 'tsconfig.json' \
   ./ $SERVER_USER@$SERVER_HOST:$REMOTE_DIR
 
-# Serverda build qilish va PM2 orqali yangilash (serverdagi configlar joyida qoladi)
+# 2. Serverda build qilish va PM2 orqali yangilash
 echo "🔄 Serverda build qilinmoqda va ilova qayta ishga tushirilmoqda..."
 ssh -i $SSH_KEY -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << 'EOF'
   cd /home/ubuntu/Web-site/litsey-web
