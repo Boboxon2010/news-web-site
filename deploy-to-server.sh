@@ -7,7 +7,7 @@ set -e
 SERVER_USER="ubuntu"
 SERVER_HOST="xorazmiival.uz"
 SERVER_PORT="22"
-SSH_KEY="litsey2026.pem"
+SSH_KEY="/home/boboxon/Web-site/litsey2026.pem"
 REMOTE_DIR="/home/ubuntu/Web-site/litsey-web"
 # ------------------
 
