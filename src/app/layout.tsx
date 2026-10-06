@@ -1,6 +1,7 @@
 import './globals.css';
 import SiteChrome from '@/components/SiteChrome';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { LanguageProvider } from '@/components/LanguageProvider';
 import type { Metadata } from 'next';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://xorazmiival.uz';
@@ -58,7 +59,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="uz">
       <body className="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
         <ThemeProvider>
-          <SiteChrome>{children}</SiteChrome>
+          <LanguageProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

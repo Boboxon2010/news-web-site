@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import SitePreferences from '@/components/SitePreferences';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,17 +35,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (pathname.includes('/admin/login')) {
-    return <>{children}</>;
+    return (
+      <>
+        <div className="fixed right-4 top-4 z-50 rounded-full bg-slate-900 p-1 shadow-lg">
+          <SitePreferences compact />
+        </div>
+        {children}
+      </>
+    );
   }
 
   if (!isAuth) return null;
 
   return (
-    <div className="min-h-screen flex bg-slate-100">
+    <div className="admin-shell min-h-screen flex bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20">
-        <div className="p-6 text-white text-xl font-black border-b border-slate-800 tracking-wider">
-          <span className="text-blue-500">IIV</span> ADMIN
+        <div className="flex items-center justify-between gap-2 border-b border-slate-800 p-4 text-xl font-black tracking-wider text-white">
+          <span><span className="text-blue-500">IIV</span> ADMIN</span>
+          <SitePreferences compact />
         </div>
         <nav className="flex-1 py-6">
           <ul className="space-y-2">

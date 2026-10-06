@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTheme } from '@/components/ThemeProvider';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import ContactAction from '@/components/ContactAction';
 import AddressLink from '@/components/AddressLink';
+import SitePreferences from '@/components/SitePreferences';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
   const settings = useSiteSettings();
 
   return (
@@ -24,26 +23,7 @@ export default function Navbar() {
             {settings.email && <span className="hidden md:inline">✉️ <ContactAction kind="email" value={settings.email} /></span>}
           </div>
 
-          {/* Quyosh / Oy Tungi-Kunduzgi Rejim Tugmasi */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-amber-400 px-3 py-1 rounded-full border border-slate-700 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-              title={theme === 'light' ? "Tungi rejimga o'tish" : "Kunduzgi rejimga o'tish"}
-            >
-              {theme === 'light' ? (
-                <>
-                  <span className="text-sm">🌙</span>
-                  <span className="hidden xs:inline">Tungi rejim</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-sm">☀️</span>
-                  <span className="hidden xs:inline">Kunduzgi rejim</span>
-                </>
-              )}
-            </button>
-          </div>
+          <SitePreferences />
         </div>
       </div>
 

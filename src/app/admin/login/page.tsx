@@ -32,16 +32,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+    <div className="admin-login min-h-screen flex items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl dark:bg-slate-900">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-700 mb-4">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Boshqaruv Paneliga Kirish</h1>
-          <p className="text-sm text-slate-500 mt-2">IIV Xorazm akademik litseyi</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Boshqaruv Paneliga Kirish</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">IIV Xorazm akademik litseyi</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">

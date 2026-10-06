@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dark :is(.admin-shell, .admin-login) .bg-white,
+.dark :is(.admin-shell, .admin-login) .bg-slate-50 {
+	background-color: #0f172a;
+}
+
+.dark :is(.admin-shell, .admin-login) .bg-slate-100 {
+	background-color: #020617;
+}
+
+.dark :is(.admin-shell, .admin-login) .text-slate-900,
+.dark :is(.admin-shell, .admin-login) .text-slate-800,
+.dark :is(.admin-shell, .admin-login) .text-slate-700 {
+	color: #e2e8f0;
+}
+
+.dark :is(.admin-shell, .admin-login) .text-slate-600,
+.dark :is(.admin-shell, .admin-login) .text-slate-500 {
+	color: #94a3b8;
+}
+
+.dark :is(.admin-shell, .admin-login) .border-slate-100,
+.dark :is(.admin-shell, .admin-login) .border-slate-200,
+.dark :is(.admin-shell, .admin-login) .border-slate-300 {
+	border-color: #334155;
+}
+
+.dark :is(.admin-shell, .admin-login) input,
+.dark :is(.admin-shell, .admin-login) textarea,
+.dark :is(.admin-shell, .admin-login) select {
+	background-color: #0f172a;
+	color: #e2e8f0;
+	border-color: #334155;
+}
