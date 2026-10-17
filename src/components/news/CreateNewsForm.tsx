@@ -75,7 +75,9 @@ export default function CreateNewsForm() {
       });
       setImages(item.images || []);
       setVideos(item.videos || []);
-      setExistingFiles(item.files || []);
+      const hiddenVideos = (item.files || []).filter((file) => file.type === 'video' || file.type.startsWith('video/'));
+      setVideos([...(item.videos || []), ...hiddenVideos]);
+      setExistingFiles((item.files || []).filter((file) => file.type !== 'video' && !file.type.startsWith('video/')));
     };
     void loadNews();
   }, []);
@@ -218,6 +220,14 @@ export default function CreateNewsForm() {
             <video src={video.dataUrl} controls preload="metadata" className="h-20 w-32 rounded bg-black" />
             <span className="min-w-0 flex-1 truncate">{video.name}</span>
             <button type="button" onClick={() => setVideos((current) => (current || []).filter((_, currentIndex) => currentIndex !== index))} className="text-red-700">Olib tashlash</button>
+          </div>)}
+        </div>}
+        {existingFiles && existingFiles.length > 0 && <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-700">Biriktirilgan hujjatlar</p>
+          {existingFiles.map((file, index) => <div key={`${file.id}-${index}`} className="flex items-center gap-3 rounded border border-slate-200 p-2 text-xs">
+            <span className="min-w-0 flex-1 truncate">{file.name}</span>
+            <a href={file.dataUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700">Ochish</a>
+            <button type="button" onClick={() => setExistingFiles((current) => (current || []).filter((_, currentIndex) => currentIndex !== index))} className="text-red-700">Olib tashlash</button>
           </div>)}
         </div>}
         {uploadProgress !== null && <div className="space-y-1" role="status">

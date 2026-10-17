@@ -42,7 +42,7 @@ const getCachedNewsSummaries = unstable_cache(
             'file_type', file.file_type
           ) ORDER BY file.id)
           FROM news_files AS file
-          WHERE file.news_id = news.id AND file.file_type = 'video'
+          WHERE file.news_id = news.id AND (file.file_type = 'video' OR file.file_type LIKE 'video/%')
         ), '[]'::json) AS videos
       FROM news
       ORDER BY news.created_at DESC

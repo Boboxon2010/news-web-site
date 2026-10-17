@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getStoredNews, saveStoredNews, NewsItem } from '@/lib/dataStore';
-import NewsMediaCarousel from '@/components/NewsMediaCarousel';
 
 export default function AdminNewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -60,7 +59,11 @@ export default function AdminNewsPage() {
         <div className="divide-y divide-slate-200">
           {news.map((item) => (
             <article key={item.id} className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center">
-              {(item.images?.length || item.videos?.length) ? <NewsMediaCarousel images={item.images} videos={item.videos} title={item.title} className="mb-0 h-20 w-28 shrink-0" /> : null}
+              {item.videos?.[0] ? (
+                <video src={item.videos[0].dataUrl} muted autoPlay loop playsInline preload="metadata" title={item.title} className="h-20 w-28 shrink-0 rounded object-cover" />
+              ) : item.images?.[0] ? (
+                <img src={item.images[0]} alt={item.title} className="h-20 w-28 shrink-0 rounded object-cover" />
+              ) : null}
               <div className="min-w-0 flex-1">
                 <h2 className="truncate font-semibold text-slate-900">{item.title}</h2>
                 <p className="mt-1 text-xs text-slate-500">{item.category} · {item.date}</p>

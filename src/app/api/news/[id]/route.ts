@@ -18,6 +18,8 @@ const normalizeImages = (images: unknown): string[] => {
     .filter((img): img is string => Boolean(img && img.length > 0));
 };
 
+const isVideoFile = (file: { type?: string }) => file.type === 'video' || file.type?.startsWith('video/') === true;
+
 const getCachedNewsDetail = unstable_cache(
   async (id: string) => {
     const result = await query(`
@@ -65,8 +67,8 @@ const getCachedNewsDetail = unstable_cache(
       shortDesc: row.short_desc,
       fullContent: row.full_content,
       images: normalizeImages(row.images),
-      files: files.filter((file: { type: string }) => file.type !== 'video'),
-      videos: files.filter((file: { type: string }) => file.type === 'video'),
+      files: files.filter((file: { type: string }) => !isVideoFile(file)),
+      videos: files.filter((file: { type: string }) => isVideoFile(file)),
     };
   },
   ['news-detail-v1'],

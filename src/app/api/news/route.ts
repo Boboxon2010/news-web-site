@@ -14,6 +14,8 @@ const normalizeFiles = (files: unknown): { name: string; dataUrl: string; type: 
   ));
 };
 
+const isVideoFile = (file: { type?: string }) => file.type === 'video' || file.type?.startsWith('video/') === true;
+
 const normalizeImages = (images: unknown): string[] => {
   if (!Array.isArray(images)) return [];
 
@@ -79,8 +81,8 @@ export async function GET() {
       shortDesc: row.short_desc,
       fullContent: row.full_content,
       images: normalizeImages(row.images),
-      files: Array.isArray(row.files) ? row.files.filter((file: any) => file.file_type !== 'video').map(mapFile) : [],
-      videos: Array.isArray(row.files) ? row.files.filter((file: any) => file.file_type === 'video').map(mapFile) : [],
+      files: Array.isArray(row.files) ? row.files.filter((file: any) => !isVideoFile({ type: file.file_type })).map(mapFile) : [],
+      videos: Array.isArray(row.files) ? row.files.filter((file: any) => isVideoFile({ type: file.file_type })).map(mapFile) : [],
     }));
 
     return NextResponse.json(newsData);
