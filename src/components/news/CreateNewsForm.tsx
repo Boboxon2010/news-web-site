@@ -157,8 +157,11 @@ export default function CreateNewsForm() {
       });
       if (response.ok) {
         const result = await response.json();
+        if (editingId && Array.isArray(savedImages) && result.imageCount !== savedImages.length) {
+          throw new Error(`Server ${result.imageCount} ta rasmni saqladi, ${savedImages.length} ta kutilgan edi. Yangilik qayta saqlanmadi.`);
+        }
         item.id = String(result.id);
-      } else if (response.status < 500 && response.status !== 404) {
+      } else {
         const result = await response.json();
         throw new Error(result.error || 'Yangilikni saqlab bo‘lmadi.');
       }

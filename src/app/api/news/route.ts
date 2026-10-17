@@ -146,7 +146,8 @@ export async function PUT(req: Request) {
     }
 
     revalidateTag('news');
-    return NextResponse.json({ success: true, id });
+    const imageCount = (await query('SELECT COUNT(*)::int AS count FROM news_images WHERE news_id = $1', [id])).rows[0].count;
+    return NextResponse.json({ success: true, id, imageCount });
   } catch {
     return NextResponse.json({ error: 'Yangilikni yangilashda xatolik yuz berdi' }, { status: 500 });
   }
