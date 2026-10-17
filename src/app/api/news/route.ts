@@ -4,6 +4,16 @@ import { query } from '@/lib/db';
 
 export const revalidate = 3600;
 
+const normalizeFiles = (files: unknown): { name: string; dataUrl: string; type: string }[] => {
+  if (!Array.isArray(files)) return [];
+  return files.filter((file): file is { name: string; dataUrl: string; type: string } => Boolean(
+    file && typeof file === 'object' &&
+    typeof file.name === 'string' && file.name &&
+    typeof file.dataUrl === 'string' && file.dataUrl &&
+    typeof file.type === 'string' && file.type
+  ));
+};
+
 const normalizeImages = (images: unknown): string[] => {
   if (!Array.isArray(images)) return [];
 
@@ -120,7 +130,9 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, title, category, date, shortDesc, fullContent, images, files } = body;
+    const { id, title, category, date, shortDesc, fullContent, images } = body;
+    const rawFiles = body.files;
+    const files = normalizeFiles(rawFiles);
     if (!id || !title || !category || !fullContent) {
       return NextResponse.json({ error: 'Yangilik ma’lumotlari to‘liq kiritilmadi' }, { status: 400 });
     }
@@ -138,7 +150,7 @@ export async function PUT(req: Request) {
         await query('INSERT INTO news_images (news_id, image_url, display_order) VALUES ($1, $2, $3)', [id, image, index]);
       }
     }
-    if (Array.isArray(files)) {
+    if (Array.isArray(rawFiles)) {
       await query('DELETE FROM news_files WHERE news_id = $1', [id]);
       for (const file of files) {
         await query('INSERT INTO news_files (news_id, file_name, file_url, file_type) VALUES ($1, $2, $3, $4)', [id, file.name, file.dataUrl, file.type]);
@@ -148,7 +160,8 @@ export async function PUT(req: Request) {
     revalidateTag('news');
     const imageCount = (await query('SELECT COUNT(*)::int AS count FROM news_images WHERE news_id = $1', [id])).rows[0].count;
     return NextResponse.json({ success: true, id, imageCount });
-  } catch {
+  } catch (error) {
+    console.error('News update error:', error);
     return NextResponse.json({ error: 'Yangilikni yangilashda xatolik yuz berdi' }, { status: 500 });
   }
 }

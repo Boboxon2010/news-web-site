@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { SiteLanguage, useLanguage } from '@/components/LanguageProvider';
 import { useTheme } from '@/components/ThemeProvider';
 
-const languages: { code: SiteLanguage; flag: string; name: string }[] = [
-  { code: 'uz', flag: '🇺🇿', name: 'O‘zbekcha' },
-  { code: 'ru', flag: '🇷🇺', name: 'Русский' },
-  { code: 'en', flag: '🇬🇧', name: 'English' },
+const languages: { code: SiteLanguage; name: string }[] = [
+  { code: 'uz', name: 'O‘zbekcha' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'en', name: 'English' },
 ];
 
 const controlLabels: Record<SiteLanguage, { dark: string; light: string; switchDark: string; switchLight: string; language: string }> = {
@@ -19,8 +18,6 @@ const controlLabels: Record<SiteLanguage, { dark: string; light: string; switchD
 export default function SitePreferences({ compact = false }: { compact?: boolean }) {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
-  const currentLanguage = languages.find((item) => item.code === language) || languages[0];
   const labels = controlLabels[language];
 
   return (
@@ -36,41 +33,16 @@ export default function SitePreferences({ compact = false }: { compact?: boolean
         {!compact && <span className="hidden sm:inline">{theme === 'light' ? labels.dark : labels.light}</span>}
       </button>
 
-      <div className="relative">
-        <button
-          type="button"
-          aria-label={labels.language}
-          aria-expanded={isLanguageOpen}
-          aria-haspopup="listbox"
-          title={labels.language}
-          onClick={() => setIsLanguageOpen((open) => !open)}
-          className="flex h-9 items-center gap-2 rounded-full border border-slate-600 bg-slate-800 px-2.5 text-xs font-bold text-white transition-colors hover:bg-slate-700"
-        >
-          <span className="text-base" aria-hidden="true">{currentLanguage.flag}</span>
-          {!compact && <span>{language.toUpperCase()}</span>}
-        </button>
-        {isLanguageOpen && (
-          <div role="listbox" aria-label={labels.language} className="absolute right-0 top-11 z-[80] flex gap-2 rounded-2xl border border-slate-700 bg-slate-950 p-2 shadow-xl">
-            {languages.map((item) => (
-              <button
-                key={item.code}
-                type="button"
-                role="option"
-                aria-selected={language === item.code}
-                aria-label={item.name}
-                title={item.name}
-                onClick={() => {
-                  setLanguage(item.code);
-                  setIsLanguageOpen(false);
-                }}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border text-xl transition-colors ${language === item.code ? 'border-amber-400 bg-amber-400/15' : 'border-slate-700 hover:border-slate-400'}`}
-              >
-                {item.flag}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <label className="sr-only" htmlFor="site-language">{labels.language}</label>
+      <select
+        id="site-language"
+        aria-label={labels.language}
+        value={language}
+        onChange={(event) => setLanguage(event.target.value as SiteLanguage)}
+        className={`h-9 rounded-full border border-slate-600 bg-slate-800 px-3 text-xs font-bold text-white outline-none transition-colors hover:bg-slate-700 ${compact ? 'w-[4.5rem]' : 'w-[7.5rem]'}`}
+      >
+        {languages.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}
+      </select>
     </div>
   );
 }
