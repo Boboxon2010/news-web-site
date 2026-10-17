@@ -41,6 +41,25 @@ ssh -i $SSH_KEY -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << 'EOF'
   
   # Yangi build qilish
   npm run build
+
+  # Katta rasm/video fayllarini oqimli yuklash va range playback uchun proxy cheklovlarini olib tashlash
+  sudo python3 - <<'PY'
+from pathlib import Path
+
+config_path = Path('/etc/nginx/sites-available/litsey-web')
+config = config_path.read_text()
+required = """        client_max_body_size 0;
+        proxy_request_buffering off;
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+"""
+marker = "        proxy_cache_bypass $http_upgrade;\n"
+if required not in config:
+    config = config.replace(marker, marker + required)
+    config_path.write_text(config)
+PY
+  sudo nginx -t
+  sudo systemctl reload nginx
   
   # Build tugagandan keyin PM2 jarayonini qayta ishga tushirish
   if command -v pm2 &> /dev/null; then

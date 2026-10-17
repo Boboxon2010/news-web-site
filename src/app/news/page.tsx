@@ -29,7 +29,7 @@ export default function NewsPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-12 space-y-12 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      
+
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <span className="text-amber-600 dark:text-amber-400 font-semibold text-xs tracking-wider uppercase">Litsey Hayoti</span>
         <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white">{settings.newsTitle}</h1>
@@ -52,6 +52,7 @@ export default function NewsPage() {
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                {item.videos?.[0] && <video src={item.videos[0].dataUrl} controls preload="metadata" className="absolute inset-0 h-full w-full bg-black object-cover" />}
                 <span className="absolute top-4 left-4 bg-amber-500 text-slate-950 font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                   {item.category}
                 </span>
@@ -86,7 +87,7 @@ export default function NewsPage() {
       {selectedNews && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-3xl w-full rounded-3xl p-6 md:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
-            
+
             <button
               onClick={() => setSelectedNews(null)}
               className="absolute top-6 right-6 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all"
@@ -108,6 +109,13 @@ export default function NewsPage() {
             {selectedNews.images && selectedNews.images.length > 0 && (
               <ImageGalleryViewer images={selectedNews.images} altTitle={selectedNews.title} />
             )}
+
+            {selectedNews.videos?.length ? (
+              <div className="space-y-3">
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white">Videolar:</h4>
+                {selectedNews.videos.map((video) => <video key={video.id} src={video.dataUrl} controls preload="metadata" className="max-h-[70vh] w-full rounded-xl bg-black" />)}
+              </div>
+            ) : null}
 
             {/* FORMATLANGAN HTML MATN VA LINKLAR */}
             <div

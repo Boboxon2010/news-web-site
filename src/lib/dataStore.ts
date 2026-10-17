@@ -29,9 +29,10 @@ export interface NewsItem {
   fullContent: string;
   images?: string[];
   files?: NewsFile[];
+  videos?: NewsFile[];
 }
 
-export type NewsSummary = Pick<NewsItem, 'id' | 'title' | 'category' | 'date' | 'shortDesc' | 'images'>;
+export type NewsSummary = Pick<NewsItem, 'id' | 'title' | 'category' | 'date' | 'shortDesc' | 'images' | 'videos'>;
 
 export function getNewsCoverImage(images?: string[]): string {
   const firstImage = Array.isArray(images) ? images.find((image) => typeof image === 'string' && image.trim().length > 0) : null;
@@ -121,7 +122,7 @@ export async function getLatestNews(refresh = false): Promise<NewsItem[]> {
         const items = await response.json();
         return Array.isArray(items) ? items as NewsItem[] : getStoredNews();
       }
-    } catch {}
+    } catch { }
     return getStoredNews();
   })();
 
@@ -135,13 +136,14 @@ export async function getLatestNews(refresh = false): Promise<NewsItem[]> {
 }
 
 export function getStoredNewsSummary(): NewsSummary[] {
-  return getStoredNews().map(({ id, title, category, date, shortDesc, images }) => ({
+  return getStoredNews().map(({ id, title, category, date, shortDesc, images, videos }) => ({
     id,
     title,
     category,
     date,
     shortDesc,
     images,
+    videos,
   }));
 }
 
@@ -156,7 +158,7 @@ export async function getLatestNewsSummary(refresh = false): Promise<NewsSummary
         const items = await response.json();
         return Array.isArray(items) ? items as NewsSummary[] : getStoredNewsSummary();
       }
-    } catch {}
+    } catch { }
     return getStoredNewsSummary();
   })();
 

@@ -33,7 +33,17 @@ const getCachedNewsSummaries = unstable_cache(
           SELECT json_agg(image.image_url ORDER BY image.display_order, image.id)
           FROM news_images AS image
           WHERE image.news_id = news.id
-        ), '[]'::json) AS images
+        ), '[]'::json) AS images,
+        COALESCE((
+          SELECT json_agg(json_build_object(
+            'id', file.id,
+            'file_name', file.file_name,
+            'file_url', file.file_url,
+            'file_type', file.file_type
+          ) ORDER BY file.id)
+          FROM news_files AS file
+          WHERE file.news_id = news.id AND file.file_type = 'video'
+        ), '[]'::json) AS videos
       FROM news
       ORDER BY news.created_at DESC
     `);
@@ -45,6 +55,12 @@ const getCachedNewsSummaries = unstable_cache(
       date: row.news_date,
       shortDesc: row.short_desc,
       images: normalizeImages(row.images),
+      videos: Array.isArray(row.videos) ? row.videos.map((video: any) => ({
+        id: String(video.id),
+        name: video.file_name,
+        dataUrl: video.file_url,
+        type: video.file_type,
+      })) : [],
     } satisfies NewsSummary));
   },
   ['news-card-summaries-v1'],

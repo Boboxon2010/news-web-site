@@ -51,6 +51,12 @@ const getCachedNewsDetail = unstable_cache(
     const row = result.rows[0];
     if (!row) return null;
 
+    const files = row.files.map((file: { id: number; file_name: string; file_url: string; file_type: string }) => ({
+      id: String(file.id),
+      name: file.file_name,
+      dataUrl: file.file_url,
+      type: file.file_type,
+    }));
     return {
       id: String(row.id),
       title: row.title,
@@ -59,12 +65,8 @@ const getCachedNewsDetail = unstable_cache(
       shortDesc: row.short_desc,
       fullContent: row.full_content,
       images: normalizeImages(row.images),
-      files: row.files.map((file: { id: number; file_name: string; file_url: string; file_type: string }) => ({
-        id: String(file.id),
-        name: file.file_name,
-        dataUrl: file.file_url,
-        type: file.file_type,
-      })),
+      files: files.filter((file: { type: string }) => file.type !== 'video'),
+      videos: files.filter((file: { type: string }) => file.type === 'video'),
     };
   },
   ['news-detail-v1'],

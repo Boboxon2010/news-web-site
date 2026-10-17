@@ -23,7 +23,7 @@ export default function GalleryPage() {
     };
   }, []);
 
-  const galleryItems = news.filter((item) => item.images?.length);
+  const galleryItems = news.filter((item) => item.images?.length || item.videos?.length);
 
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4 font-sans dark:bg-slate-950">
@@ -51,10 +51,11 @@ export default function GalleryPage() {
                   className="relative block h-64 w-full overflow-hidden bg-slate-100 dark:bg-slate-800"
                 >
                   <img
-                    src={item.images?.[0]}
+                    src={item.images?.[0] || '/images/IIV_logo.png'}
                     alt={item.title}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  {!item.images?.length && item.videos?.[0] && <video src={item.videos[0].dataUrl} controls preload="metadata" className="absolute inset-0 h-full w-full bg-black object-cover" />}
                   {item.images && item.images.length > 1 && (
                     <span className="absolute bottom-3 right-3 bg-slate-950/80 px-2.5 py-1 text-xs font-semibold text-white">
                       {item.images.length} ta rasm

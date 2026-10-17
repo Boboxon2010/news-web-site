@@ -55,6 +55,12 @@ const getCachedNewsRows = unstable_cache(
 export async function GET() {
   try {
     const rows = await getCachedNewsRows();
+    const mapFile = (file: any) => ({
+      id: file.id.toString(),
+      name: file.file_name,
+      dataUrl: file.file_url,
+      type: file.file_type,
+    });
     const newsData = rows.map((row: any) => ({
       id: row.id.toString(),
       title: row.title,
@@ -63,12 +69,8 @@ export async function GET() {
       shortDesc: row.short_desc,
       fullContent: row.full_content,
       images: normalizeImages(row.images),
-      files: Array.isArray(row.files) ? row.files.map((file: any) => ({
-        id: file.id.toString(),
-        name: file.file_name,
-        dataUrl: file.file_url,
-        type: file.file_type
-      })) : []
+      files: Array.isArray(row.files) ? row.files.filter((file: any) => file.file_type !== 'video').map(mapFile) : [],
+      videos: Array.isArray(row.files) ? row.files.filter((file: any) => file.file_type === 'video').map(mapFile) : [],
     }));
 
     return NextResponse.json(newsData);
@@ -130,13 +132,17 @@ export async function PUT(req: Request) {
     );
     if (updated.rowCount === 0) return NextResponse.json({ error: 'Yangilik topilmadi' }, { status: 404 });
 
-    await query('DELETE FROM news_images WHERE news_id = $1', [id]);
-    await query('DELETE FROM news_files WHERE news_id = $1', [id]);
-    for (const [index, image] of (images || []).entries()) {
-      await query('INSERT INTO news_images (news_id, image_url, display_order) VALUES ($1, $2, $3)', [id, image, index]);
+    if (Array.isArray(images)) {
+      await query('DELETE FROM news_images WHERE news_id = $1', [id]);
+      for (const [index, image] of images.entries()) {
+        await query('INSERT INTO news_images (news_id, image_url, display_order) VALUES ($1, $2, $3)', [id, image, index]);
+      }
     }
-    for (const file of files || []) {
-      await query('INSERT INTO news_files (news_id, file_name, file_url, file_type) VALUES ($1, $2, $3, $4)', [id, file.name, file.dataUrl, file.type]);
+    if (Array.isArray(files)) {
+      await query('DELETE FROM news_files WHERE news_id = $1', [id]);
+      for (const file of files) {
+        await query('INSERT INTO news_files (news_id, file_name, file_url, file_type) VALUES ($1, $2, $3, $4)', [id, file.name, file.dataUrl, file.type]);
+      }
     }
 
     revalidateTag('news');

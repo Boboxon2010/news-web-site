@@ -149,6 +149,8 @@ export default function HomePage() {
                   <div className="relative z-10 pointer-events-none">
                     {hasImages ? (
                       <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => { void openNews(item); }} />
+                    ) : item.videos?.[0] ? (
+                      <video src={item.videos[0].dataUrl} controls preload="metadata" className="mb-4 h-48 w-full rounded-xl bg-black object-cover" />
                     ) : (
                       <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
                         <Image src={primaryImage} alt={item.title} width={960} height={540} quality={75} loading="lazy" unoptimized className="h-full w-full object-cover" />
@@ -165,7 +167,7 @@ export default function HomePage() {
                     <h3 className="font-bold text-base text-slate-900 dark:text-white mb-2 line-clamp-2">
                       {item.title}
                     </h3>
-                    
+
                     <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 mb-4">
                       {item.shortDesc}
                     </p>
@@ -226,6 +228,15 @@ export default function HomePage() {
                 </section>
               ) : null}
 
+              {selectedNews.videos?.length ? (
+                <section className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Videolar</h2>
+                  <div className="space-y-4">
+                    {selectedNews.videos.map((video) => <video key={video.id} src={video.dataUrl} controls preload="metadata" className="max-h-[70vh] w-full rounded-xl bg-black" />)}
+                  </div>
+                </section>
+              ) : null}
+
               <section className="max-w-4xl border-l-2 border-amber-500 pl-5 sm:pl-7">
                 <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Maqola</h2>
                 {isNewsDetailLoading ? (
@@ -268,7 +279,7 @@ export default function HomePage() {
 
       {/* Galereya modali */}
       {isGalleryOpen && (
-        <ImageGalleryViewer 
+        <ImageGalleryViewer
           images={selectedGallery}
           modalOnly
           onClose={() => setIsGalleryOpen(false)}

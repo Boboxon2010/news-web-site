@@ -10,50 +10,103 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml';
 const today = () => new Date().toLocaleDateString('uz-UZ');
 const emptyForm = { title: '', category: 'Tadbir', date: today(), shortDesc: '', fullContent: '' };
 
+function uploadFile(file: File, onProgress: (percent: number) => void): Promise<{ id: string; name: string; dataUrl: string; type: string }> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', '/api/uploads');
+    request.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    request.setRequestHeader('X-File-Name', file.name);
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    request.onload = () => {
+      try {
+        const result = JSON.parse(request.responseText);
+        if (request.status >= 200 && request.status < 300 && result.success) resolve(result);
+        else reject(new Error(result.error || 'Faylni yuklashda xatolik yuz berdi.'));
+      } catch {
+        reject(new Error('Server javobini o‘qib bo‘lmadi.'));
+      }
+    };
+    request.onerror = () => reject(new Error('Faylni serverga yuklashda xatolik yuz berdi.'));
+    request.onabort = () => reject(new Error('Fayl yuklash bekor qilindi.'));
+    request.send(file);
+  });
+}
+
+async function dataUrlToFile(dataUrl: string, index: number): Promise<File> {
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return new File([blob], `news-image-${index + 1}.${blob.type.split('/')[1] || 'jpg'}`, { type: blob.type });
+}
+
 export default function CreateNewsForm() {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
   const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<NewsItem['videos']>([]);
+  const [existingFiles, setExistingFiles] = useState<NewsItem['files']>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get('id');
-    if (!id) return;
-    const item = getStoredNews().find((news) => news.id === id);
-    if (!item) {
-      setError('Yangilik topilmadi.');
-      return;
-    }
-    setEditingId(item.id);
-    setForm({
-      title: item.title,
-      category: item.category,
-      date: item.date,
-      shortDesc: item.shortDesc,
-      fullContent: item.fullContent,
-    });
-    setImages(item.images || []);
+    const loadNews = async () => {
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) return;
+      const storedItem = getStoredNews().find((news) => news.id === id);
+      const response = await fetch(`/api/news/${encodeURIComponent(id)}`, { cache: 'no-store' }).catch(() => null);
+      const serverItem = response?.ok ? await response.json() as NewsItem : null;
+      const item = serverItem && storedItem && (storedItem.images?.length || 0) > (serverItem.images?.length || 0)
+        ? { ...serverItem, images: Array.from(new Set([...(serverItem.images || []), ...(storedItem.images || [])])) }
+        : serverItem || storedItem;
+      if (!item) {
+        setError('Yangilik topilmadi.');
+        return;
+      }
+      setEditingId(item.id);
+      setForm({
+        title: item.title,
+        category: item.category,
+        date: item.date,
+        shortDesc: item.shortDesc,
+        fullContent: item.fullContent,
+      });
+      setImages(item.images || []);
+      setVideos(item.videos || []);
+      setExistingFiles(item.files || []);
+    };
+    void loadNews();
   }, []);
 
   const handleImages = async (files: File[]) => {
     setError('');
-    if (images.length + files.length > 4) {
-      setError('Ko‘pi bilan 4 ta rasm biriktirish mumkin.');
-      return;
-    }
-
     try {
-      const dataUrls = await Promise.all(files.map((file) => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Rasm o‘qilmadi.'));
-        reader.onerror = () => reject(new Error('Rasmni o‘qishda xatolik.'));
-        reader.readAsDataURL(file);
+      setUploadProgress(0);
+      const uploaded = await Promise.all(files.map((file, index) => uploadFile(file, (percent) => {
+        setUploadProgress(Math.round(((index + percent / 100) / files.length) * 100));
       })));
-      setImages((current) => [...current, ...dataUrls]);
-    } catch {
-      setError('Rasmni o‘qishda xatolik yuz berdi.');
+      setImages((current) => [...current, ...uploaded.map((file) => file.dataUrl)]);
+      setUploadProgress(null);
+    } catch (uploadError) {
+      setUploadProgress(null);
+      setError(uploadError instanceof Error ? uploadError.message : 'Rasmni yuklashda xatolik yuz berdi.');
+    }
+  };
+
+  const handleVideos = async (files: File[]) => {
+    setError('');
+    try {
+      setUploadProgress(0);
+      const uploaded = await Promise.all(files.map((file, index) => uploadFile(file, (percent) => {
+        setUploadProgress(Math.round(((index + percent / 100) / files.length) * 100));
+      })));
+      setVideos((current) => [...(current || []), ...uploaded]);
+      setUploadProgress(null);
+    } catch (uploadError) {
+      setUploadProgress(null);
+      setError(uploadError instanceof Error ? uploadError.message : 'Videoni yuklashda xatolik yuz berdi.');
     }
   };
 
@@ -68,12 +121,33 @@ export default function CreateNewsForm() {
     setSaving(true);
     setError('');
     const current = getStoredNews();
+    let savedImages = images;
+    try {
+      const legacyImages = images.filter((image) => image.startsWith('data:'));
+      if (legacyImages.length > 0) {
+        setUploadProgress(0);
+        const uploaded = await Promise.all(legacyImages.map(async (image, index) => {
+          const file = await dataUrlToFile(image, index);
+          return uploadFile(file, (percent) => {
+            setUploadProgress(Math.round(((index + percent / 100) / legacyImages.length) * 100));
+          });
+        }));
+        let uploadedIndex = 0;
+        savedImages = images.map((image) => image.startsWith('data:') ? uploaded[uploadedIndex++].dataUrl : image);
+      }
+      setUploadProgress(null);
+    } catch (uploadError) {
+      setUploadProgress(null);
+      setError(uploadError instanceof Error ? uploadError.message : 'Eski rasmlarni serverga ko‘chirishda xatolik yuz berdi.');
+      setSaving(false);
+      return;
+    }
     const item: NewsItem = {
       id: editingId || createStoredId(),
       ...form,
       fullContent: safeFullContent,
-      images,
-      files: current.find((news) => news.id === editingId)?.files || [],
+      images: savedImages,
+      files: [...(existingFiles || []), ...(videos || [])],
     };
     try {
       const response = await fetch('/api/news', {
@@ -133,8 +207,23 @@ export default function CreateNewsForm() {
         </div>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <div className="space-y-2 text-sm font-medium text-slate-700">
-          <p>Rasmlar (har biri 900 KB gacha, jami 4 tagacha)</p>
-          <ImageUploadDropzone label="Rasm tanlang yoki shu yerga tashlang" multiple onFiles={handleImages} onError={setError} />
+          <p>Videolar (hajm va son cheklovi yo‘q)</p>
+          <ImageUploadDropzone label="Video tanlang yoki shu yerga tashlang" multiple accept="video/*" fileKind="video" maxFileSizeBytes={null} onFiles={handleVideos} onError={setError} />
+        </div>
+        {videos && videos.length > 0 && <div className="space-y-2">
+          {videos.map((video, index) => <div key={`${video.dataUrl}-${index}`} className="flex items-center gap-3 rounded border border-slate-200 p-2 text-xs">
+            <video src={video.dataUrl} controls preload="metadata" className="h-20 w-32 rounded bg-black" />
+            <span className="min-w-0 flex-1 truncate">{video.name}</span>
+            <button type="button" onClick={() => setVideos((current) => (current || []).filter((_, currentIndex) => currentIndex !== index))} className="text-red-700">Olib tashlash</button>
+          </div>)}
+        </div>}
+        {uploadProgress !== null && <div className="space-y-1" role="status">
+          <div className="h-2 w-full overflow-hidden rounded bg-slate-200"><div className="h-full bg-amber-500 transition-all" style={{ width: `${uploadProgress}%` }} /></div>
+          <p className="text-xs text-slate-500">Yuklanmoqda: {uploadProgress}%</p>
+        </div>}
+        <div className="space-y-2 text-sm font-medium text-slate-700">
+          <p>Rasmlar (hajm va son cheklovi yo‘q)</p>
+          <ImageUploadDropzone label="Rasm tanlang yoki shu yerga tashlang" multiple maxFileSizeBytes={null} onFiles={handleImages} onError={setError} />
         </div>
         {images.length > 0 && <div className="flex flex-wrap gap-3">
           {images.map((image, index) => <div key={`${(image || '').slice(0, 40)}-${index}`} className="relative">

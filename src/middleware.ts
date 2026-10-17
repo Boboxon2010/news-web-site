@@ -23,10 +23,11 @@ export async function middleware(request: NextRequest) {
 
   // Content APIs are public for reads; every mutation requires an admin session.
   const isContentApi = ['/api/news', '/api/leaders', '/api/settings'].includes(pathname);
+  const isUploadApi = pathname === '/api/uploads';
   const isAdminApi = pathname.startsWith('/api/admin');
   const isPrivateStatsRead = pathname === '/api/stats' && request.method === 'GET';
   const isPrivateContactAction = pathname === '/api/contact' && ['GET', 'PATCH', 'DELETE'].includes(request.method);
-  if (isAdminApi || isPrivateStatsRead || isPrivateContactAction || (isContentApi && request.method !== 'GET')) {
+  if (isAdminApi || isUploadApi || isPrivateStatsRead || isPrivateContactAction || (isContentApi && request.method !== 'GET')) {
     const token = request.cookies.get('admin_session')?.value;
     if (!token || !(await verifyJwtToken(token))) {
       return NextResponse.json({ error: 'Ruxsat berilmagan (Unauthorized)' }, { status: 401 });
@@ -37,5 +38,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/news', '/api/leaders', '/api/settings', '/api/contact', '/api/stats'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/news', '/api/leaders', '/api/settings', '/api/uploads', '/api/contact', '/api/stats'],
 };

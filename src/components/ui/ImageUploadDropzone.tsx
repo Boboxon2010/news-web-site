@@ -5,7 +5,9 @@ import { useRef, useState } from 'react';
 interface ImageUploadDropzoneProps {
   label: string;
   multiple?: boolean;
-  maxFileSizeBytes?: number;
+  maxFileSizeBytes?: number | null;
+  accept?: string;
+  fileKind?: 'image' | 'video';
   onFiles: (files: File[]) => void;
   onError: (message: string) => void;
 }
@@ -14,6 +16,8 @@ export default function ImageUploadDropzone({
   label,
   multiple = false,
   maxFileSizeBytes = 900_000,
+  accept = 'image/*',
+  fileKind = 'image',
   onFiles,
   onError,
 }: ImageUploadDropzoneProps) {
@@ -23,11 +27,11 @@ export default function ImageUploadDropzone({
   const acceptFiles = (files: File[]) => {
     if (files.length === 0) return;
 
-    if (files.some((file) => !file.type.startsWith('image/'))) {
-      onError('Faqat rasm fayllarini tanlang.');
+    if (files.some((file) => !file.type.startsWith(`${fileKind}/`))) {
+      onError(fileKind === 'video' ? 'Faqat video fayllarini tanlang.' : 'Faqat rasm fayllarini tanlang.');
       return;
     }
-    if (files.some((file) => file.size > maxFileSizeBytes)) {
+    if (maxFileSizeBytes && files.some((file) => file.size > maxFileSizeBytes)) {
       onError(`Har bir rasm hajmi ${(maxFileSizeBytes / 1_000_000).toFixed(1)} MB dan oshmasligi kerak.`);
       return;
     }
@@ -71,16 +75,15 @@ export default function ImageUploadDropzone({
         setIsDragOver(false);
         acceptFiles(Array.from(event.dataTransfer.files));
       }}
-      className={`cursor-pointer rounded border-2 border-dashed p-5 text-center text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-        isDragOver
-          ? 'border-amber-500 bg-amber-50 text-slate-900'
-          : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-amber-500'
-      }`}
+      className={`cursor-pointer rounded border-2 border-dashed p-5 text-center text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${isDragOver
+        ? 'border-amber-500 bg-amber-50 text-slate-900'
+        : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-amber-500'
+        }`}
     >
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept}
         multiple={multiple}
         tabIndex={-1}
         aria-hidden="true"
@@ -92,7 +95,7 @@ export default function ImageUploadDropzone({
       />
       <span className="block font-semibold">{isDragOver ? 'Rasmlarni shu yerga tashlang' : label}</span>
       <span className="mt-1 block text-xs text-slate-500">Bosing, sudrab tashlang yoki Ctrl+V orqali joylang</span>
-      <span className="mt-1 block text-xs text-slate-500">Har biri {(maxFileSizeBytes / 1_000_000).toFixed(1)} MB gacha</span>
+      {maxFileSizeBytes ? <span className="mt-1 block text-xs text-slate-500">Har biri {(maxFileSizeBytes / 1_000_000).toFixed(1)} MB gacha</span> : <span className="mt-1 block text-xs text-slate-500">Hajm cheklovi yo‘q</span>}
     </div>
   );
 }
