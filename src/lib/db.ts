@@ -27,6 +27,7 @@ const initDb = async () => {
         ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS news_title TEXT NOT NULL DEFAULT '';
         ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS news_subtitle TEXT NOT NULL DEFAULT '';
       `),
+      pool.query(`ALTER TABLE news ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;`),
       pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;`),
       pool.query(`
         CREATE TABLE IF NOT EXISTS site_visits (

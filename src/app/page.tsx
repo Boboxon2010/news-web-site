@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
-import NewsCardCarousel from '@/components/NewsCardCarousel';
+import NewsMediaCarousel from '@/components/NewsMediaCarousel';
+import NewsVideo from '@/components/NewsVideo';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLatestNewsSummary, getStoredNewsSummary, getNewsCoverImage, NewsItem, NewsSummary } from '@/lib/dataStore';
@@ -147,10 +148,8 @@ export default function HomePage() {
                     className="absolute inset-0 z-0 rounded-2xl"
                   />
                   <div className="relative z-10 pointer-events-none">
-                    {hasImages ? (
-                      <NewsCardCarousel images={imagesList} title={item.title} onOpenNews={() => { void openNews(item); }} />
-                    ) : item.videos?.[0] ? (
-                      <video src={item.videos[0].dataUrl} controls preload="metadata" className="mb-4 h-48 w-full rounded-xl bg-black object-cover" />
+                    {hasImages || item.videos?.length ? (
+                      <NewsMediaCarousel images={imagesList} videos={item.videos} title={item.title} onOpenNews={() => { void openNews(item); }} />
                     ) : (
                       <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
                         <Image src={primaryImage} alt={item.title} width={960} height={540} quality={75} loading="lazy" unoptimized className="h-full w-full object-cover" />
@@ -232,7 +231,7 @@ export default function HomePage() {
                 <section className="space-y-3">
                   <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Videolar</h2>
                   <div className="space-y-4">
-                    {selectedNews.videos.map((video) => <video key={video.id} src={video.dataUrl} controls preload="metadata" className="max-h-[70vh] w-full rounded-xl bg-black" />)}
+                    {selectedNews.videos.map((video) => <NewsVideo key={video.id} src={video.dataUrl} title={selectedNews.title} detail className="max-h-[70vh] w-full rounded-xl" />)}
                   </div>
                 </section>
               ) : null}

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
+import NewsMediaCarousel from '@/components/NewsMediaCarousel';
+import NewsVideo from '@/components/NewsVideo';
 import { getLatestNews, getStoredNews, getNewsCoverImage, NewsItem } from '@/lib/dataStore';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
@@ -47,12 +49,11 @@ export default function NewsPage() {
           >
             <div>
               <div className="relative h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <img
-                  src={getNewsCoverImage(item.images)}
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {item.videos?.[0] && <video src={item.videos[0].dataUrl} controls preload="metadata" className="absolute inset-0 h-full w-full bg-black object-cover" />}
+                {(item.images?.length || item.videos?.length) ? (
+                  <NewsMediaCarousel images={item.images} videos={item.videos} title={item.title} className="mb-0 h-48 w-full rounded-none" />
+                ) : (
+                  <img src={getNewsCoverImage(item.images)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                )}
                 <span className="absolute top-4 left-4 bg-amber-500 text-slate-950 font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                   {item.category}
                 </span>
@@ -113,7 +114,7 @@ export default function NewsPage() {
             {selectedNews.videos?.length ? (
               <div className="space-y-3">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white">Videolar:</h4>
-                {selectedNews.videos.map((video) => <video key={video.id} src={video.dataUrl} controls preload="metadata" className="max-h-[70vh] w-full rounded-xl bg-black" />)}
+                {selectedNews.videos.map((video) => <NewsVideo key={video.id} src={video.dataUrl} title={selectedNews.title} detail className="max-h-[70vh] w-full rounded-xl" />)}
               </div>
             ) : null}
 

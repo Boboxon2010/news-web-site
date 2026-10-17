@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
+import NewsVideo from '@/components/NewsVideo';
 import { getLatestNews, getStoredNews, NewsItem } from '@/lib/dataStore';
 
 export default function GalleryPage() {
@@ -55,7 +56,7 @@ export default function GalleryPage() {
                     alt={item.title}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  {!item.images?.length && item.videos?.[0] && <video src={item.videos[0].dataUrl} controls preload="metadata" className="absolute inset-0 h-full w-full bg-black object-cover" />}
+                  {!item.images?.length && item.videos?.[0] && <NewsVideo src={item.videos[0].dataUrl} title={item.title} className="absolute inset-0 h-full w-full" />}
                   {item.images && item.images.length > 1 && (
                     <span className="absolute bottom-3 right-3 bg-slate-950/80 px-2.5 py-1 text-xs font-semibold text-white">
                       {item.images.length} ta rasm
