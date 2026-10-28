@@ -4,30 +4,32 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { LanguageProvider } from '@/components/LanguageProvider';
 import type { Metadata } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://xorazmiival.uz';
-const siteName = 'IIV Xorazm akademik litseyi';
-const siteDescription = 'IIV Xorazm akademik litseyining rasmiy sayti: qabul, ta’lim, rahbariyat va Xorazm IIV litseyi yangiliklari.';
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://xorazmiival.uz').replace(/\/$/, '');
+const siteName = 'Xorazm IIV litseyi';
+const siteDescription = 'Xorazm IIV litseyi rasmiy sayti: qabul, ta’lim, rahbariyat, yangiliklar va xorazm iiv litsey haqida ma’lumotlar.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'IIV Xorazm akademik litseyi | Rasmiy sayt',
-    template: '%s | IIV Xorazm akademik litseyi',
+    default: 'Xorazm IIV litseyi | Rasmiy sayt',
+    template: '%s | Xorazm IIV litseyi',
   },
   description: siteDescription,
   keywords: [
-    'iiv',
-    'xorazm',
-    'iiv xorazm',
-    'xorazm iiv',
-    'iiv xorazm akademik litseyi',
-    'xorazm iiv akademik litseyi',
+    'xorazm iiv litsey',
     'iiv litsey xorazm',
-    'xorazm litseyi',
-    'akademik litsey xorazm',
+    'xorazm iiv akademik litsey',
+    'xorazm akademik litsey iiv',
+    'xorazm iiv litseyi',
+    'iiv litsey',
+    'xorazm litsey',
+    'xorazm iiv',
+    'iiv xorazm',
+    'xorazm iiv litsey qabul',
+    'xorazm akademik litsey',
+    'xorazm iiv litsey yangiliklari',
+    'iiv xorazm akademik litsey',
     'ichki ishlar vazirligi litseyi',
-    'iiv akademik litseyi qabul',
-    'xorazm iiv litseyi yangiliklari',
   ],
   alternates: { canonical: '/' },
   openGraph: {
@@ -35,13 +37,13 @@ export const metadata: Metadata = {
     locale: 'uz_UZ',
     url: '/',
     siteName,
-    title: 'IIV Xorazm akademik litseyi | Rasmiy sayt',
+    title: 'Xorazm IIV litseyi | Rasmiy sayt',
     description: siteDescription,
     images: ['/images/IIV_logo.png'],
   },
   twitter: {
     card: 'summary',
-    title: 'IIV Xorazm akademik litseyi | Rasmiy sayt',
+    title: 'Xorazm IIV litseyi | Rasmiy sayt',
     description: siteDescription,
     images: ['/images/IIV_logo.png'],
   },
