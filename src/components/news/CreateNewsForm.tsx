@@ -50,6 +50,7 @@ export default function CreateNewsForm() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
     const loadNews = async () => {
@@ -109,6 +110,26 @@ export default function CreateNewsForm() {
     } catch (uploadError) {
       setUploadProgress(null);
       setError(uploadError instanceof Error ? uploadError.message : 'Videoni yuklashda xatolik yuz berdi.');
+    }
+  };
+
+  const addVideoUrl = () => {
+    const value = videoUrl.trim();
+    if (!value) return;
+
+    try {
+      const url = new URL(value);
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
+      setVideos((current) => [...(current || []), {
+        id: createStoredId(),
+        name: url.hostname,
+        dataUrl: url.toString(),
+        type: 'video',
+      }]);
+      setVideoUrl('');
+      setError('');
+    } catch {
+      setError('Videoning havolasi noto‘g‘ri. HTTPS yoki HTTP havolasini kiriting.');
     }
   };
 
@@ -197,6 +218,7 @@ export default function CreateNewsForm() {
           <label className="block text-sm font-medium text-slate-700">Kategoriya
             <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2.5">
               <option>Tadbir</option><option>E'lon</option><option>Yutuqlar</option><option>Qabul</option>
+              <option>Uchrashuv</option><option>Tabrik</option>
             </select>
           </label>
           <label className="block text-sm font-medium text-slate-700">Sana
@@ -214,6 +236,16 @@ export default function CreateNewsForm() {
         <div className="space-y-2 text-sm font-medium text-slate-700">
           <p>Videolar (hajm va son cheklovi yo‘q)</p>
           <ImageUploadDropzone label="Video tanlang yoki shu yerga tashlang" multiple accept="video/*" fileKind="video" maxFileSizeBytes={null} onFiles={handleVideos} onError={setError} />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(event) => setVideoUrl(event.target.value)}
+              placeholder="YouTube yoki cloud video havolasi"
+              className="min-w-0 flex-1 rounded border border-slate-300 px-3 py-2 text-sm font-normal"
+            />
+            <button type="button" onClick={addVideoUrl} className="rounded border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Havoladan qo‘shish</button>
+          </div>
         </div>
         {videos && videos.length > 0 && <div className="space-y-2">
           {videos.map((video, index) => <div key={`${video.dataUrl}-${index}`} className="flex items-center gap-3 rounded border border-slate-200 p-2 text-xs">

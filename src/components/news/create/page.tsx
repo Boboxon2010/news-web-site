@@ -98,6 +98,8 @@ export default function CreateNewsPage() {
               <option value="E'lon">E'lon</option>
               <option value="Yutuqlar">Yutuqlar</option>
               <option value="Qabul">Qabul - 2026</option>
+              <option value="Uchrashuv">Uchrashuv</option>
+              <option value="Tabrik">Tabrik</option>
             </select>
           </div>
 
