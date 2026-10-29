@@ -36,7 +36,7 @@ export default function NewsVideo({ src, title, className = '', detail = false }
     };
 
     return (
-        <div className={`relative overflow-hidden bg-black ${className}`}>
+        <div className={`relative overflow-hidden bg-black ${detail ? 'aspect-video' : ''} ${className}`}>
             {youtubeVideoId ? (
                 <iframe
                     src={`https://www.youtube.com/embed/${encodeURIComponent(youtubeVideoId)}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${encodeURIComponent(youtubeVideoId)}&controls=${detail ? 1 : 0}&rel=0`}
