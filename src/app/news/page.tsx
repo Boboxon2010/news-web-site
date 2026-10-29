@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import NewsMediaCarousel from '@/components/NewsMediaCarousel';
 import NewsVideo from '@/components/NewsVideo';
@@ -8,10 +8,37 @@ import { getLatestNews, getStoredNews, getNewsCoverImage, NewsItem } from '@/lib
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
+const NEWS_PER_PAGE = 15;
+
+function getNewsTimestamp(dateValue: string): number {
+  const value = dateValue.trim();
+  const isoDateMatch = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoDateMatch) {
+    const [, year, month, day] = isoDateMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day)).getTime();
+  }
+
+  const dayFirstMatch = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+  if (dayFirstMatch) {
+    const [, day, month, year] = dayFirstMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day)).getTime();
+  }
+
+  const timestamp = Date.parse(value);
+  if (!Number.isNaN(timestamp)) return timestamp;
+
+  return 0;
+}
+
 export default function NewsPage() {
   const settings = useSiteSettings();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [page, setPage] = useState(1);
 
   const fetchNews = (refresh = false) => {
     if (refresh) setNews(getStoredNews());
@@ -29,6 +56,49 @@ export default function NewsPage() {
     };
   }, []);
 
+  const categories = useMemo(
+    () => Array.from(new Set(news.map((item) => item.category.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [news],
+  );
+
+  const filteredNews = useMemo(() => {
+    const normalizedSearch = search.trim().toLocaleLowerCase();
+    const startTimestamp = startDate ? new Date(`${startDate}T00:00:00`).getTime() : null;
+    const endTimestamp = endDate ? new Date(`${endDate}T23:59:59.999`).getTime() : null;
+    const uniqueNews = new Map<string, NewsItem>();
+
+    news.forEach((item) => {
+      if (!uniqueNews.has(item.id)) uniqueNews.set(item.id, item);
+    });
+
+    return Array.from(uniqueNews.values())
+      .filter((item) => {
+        const searchableText = `${item.title} ${item.shortDesc} ${item.fullContent} ${item.category}`.toLocaleLowerCase();
+        const timestamp = getNewsTimestamp(item.date);
+        return (
+          (!normalizedSearch || searchableText.includes(normalizedSearch)) &&
+          (!category || item.category === category) &&
+          (startTimestamp === null || (timestamp > 0 && timestamp >= startTimestamp)) &&
+          (endTimestamp === null || (timestamp > 0 && timestamp <= endTimestamp))
+        );
+      })
+      .sort((a, b) => {
+        const dateDifference = getNewsTimestamp(b.date) - getNewsTimestamp(a.date);
+        return dateDifference || Number(b.id) - Number(a.id) || b.id.localeCompare(a.id);
+      });
+  }, [category, endDate, news, search, startDate]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredNews.length / NEWS_PER_PAGE));
+  const visibleNews = filteredNews.slice((page - 1) * NEWS_PER_PAGE, page * NEWS_PER_PAGE);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, pageCount));
+  }, [pageCount]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, endDate, search, startDate]);
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-12 space-y-12 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
@@ -40,8 +110,52 @@ export default function NewsPage() {
         </p>
       </div>
 
+      <section aria-label="Yangiliklarni qidirish va filtrlash" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <label className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          Qidirish
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Sarlavha yoki matn..."
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-normal text-slate-900 dark:text-white outline-none focus:border-amber-500"
+          />
+        </label>
+        <label className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          Kategoriya
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-normal text-slate-900 dark:text-white outline-none focus:border-amber-500"
+          >
+            <option value="">Barcha kategoriyalar</option>
+            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          Boshlanish sanasi
+          <input
+            type="date"
+            value={startDate}
+            max={endDate || undefined}
+            onChange={(event) => setStartDate(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-normal text-slate-900 dark:text-white outline-none focus:border-amber-500"
+          />
+        </label>
+        <label className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          Tugash sanasi
+          <input
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(event) => setEndDate(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-normal text-slate-900 dark:text-white outline-none focus:border-amber-500"
+          />
+        </label>
+      </section>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {news.map((item) => (
+        {visibleNews.map((item) => (
           <article
             key={item.id}
             onClick={() => setSelectedNews(item)}
@@ -83,6 +197,42 @@ export default function NewsPage() {
           </article>
         ))}
       </div>
+
+      {visibleNews.length === 0 && (
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">Tanlangan mezonlarga mos yangilik topilmadi.</p>
+      )}
+
+      {filteredNews.length > NEWS_PER_PAGE && (
+        <nav aria-label="Yangiliklar sahifalari" className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            disabled={page === 1}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Oldingi
+          </button>
+          {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+            <button
+              type="button"
+              key={pageNumber}
+              onClick={() => setPage(pageNumber)}
+              aria-current={pageNumber === page ? 'page' : undefined}
+              className={`h-9 min-w-9 rounded-xl px-3 text-sm font-bold ${pageNumber === page ? 'bg-amber-500 text-slate-950' : 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'}`}
+            >
+              {pageNumber}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.min(pageCount, currentPage + 1))}
+            disabled={page === pageCount}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Keyingi
+          </button>
+        </nav>
+      )}
 
       {/* BATAFSIL MODAL (SLIDER & ZOOM USKUNALARI VA LINKLAR) */}
       {selectedNews && (
