@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import ImageGalleryViewer from '@/components/ImageGalleryViewer';
 import NewsMediaCarousel from '@/components/NewsMediaCarousel';
@@ -9,10 +9,12 @@ import LoadingIndicator from '@/components/LoadingIndicator';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLatestNewsSummary, getStoredNewsSummary, getNewsCoverImage, NewsItem, NewsSummary } from '@/lib/dataStore';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import NewsFilters from '@/components/news/NewsFilters';
 
 export default function HomePage() {
   const settings = useSiteSettings();
   const [news, setNews] = useState<NewsSummary[]>([]);
+  const [filteredNews, setFilteredNews] = useState<NewsSummary[]>([]);
   const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [selectedGallery, setSelectedGallery] = useState<string[]>([]);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -20,6 +22,9 @@ export default function HomePage() {
   const [isNewsDetailLoading, setIsNewsDetailLoading] = useState(false);
   const [newsDetailError, setNewsDetailError] = useState('');
   const newsDetailRequest = useRef(0);
+  const handleFilteredNews = useCallback((items: NewsSummary[]) => {
+    setFilteredNews(items);
+  }, []);
 
   useEffect(() => {
     const updateNews = (refresh = false) => {
@@ -133,8 +138,10 @@ export default function HomePage() {
             Hozircha yangiliklar mavjud emas.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((item) => {
+          <>
+            <NewsFilters news={news} onChange={handleFilteredNews} />
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredNews.map((item) => {
               const imagesList = item.images || [];
               const hasImages = imagesList.length > 0;
               const primaryImage = getNewsCoverImage(imagesList);
@@ -184,7 +191,8 @@ export default function HomePage() {
                 </article>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </section>
 

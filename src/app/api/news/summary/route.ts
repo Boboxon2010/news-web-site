@@ -45,7 +45,13 @@ const getCachedNewsSummaries = unstable_cache(
           WHERE file.news_id = news.id AND (file.file_type = 'video' OR file.file_type LIKE 'video/%')
         ), '[]'::json) AS videos
       FROM news
-      ORDER BY news.created_at DESC
+      ORDER BY
+        CASE WHEN news.news_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+          THEN TO_DATE(news.news_date, 'YYYY-MM-DD')
+          ELSE DATE '1970-01-01'
+        END DESC,
+        news.created_at DESC,
+        news.id DESC
     `);
 
     return result.rows.map((row) => ({

@@ -3,6 +3,7 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import { query } from '@/lib/db';
 
 export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const normalizeFiles = (files: unknown): { name: string; dataUrl: string; type: string }[] => {
   if (!Array.isArray(files)) return [];
@@ -56,7 +57,13 @@ const getCachedNewsRows = unstable_cache(
           WHERE file.news_id = n.id
         ), '[]'::json) AS files
       FROM news n
-      ORDER BY n.created_at DESC
+      ORDER BY
+        CASE WHEN n.news_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+          THEN TO_DATE(n.news_date, 'YYYY-MM-DD')
+          ELSE DATE '1970-01-01'
+        END DESC,
+        n.created_at DESC,
+        n.id DESC
     `);
     return result.rows;
   },
