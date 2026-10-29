@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     template: '%s | Xorazm IIV litseyi',
   },
   description: siteDescription,
+  icons: {
+    icon: '/images/webico.webp',
+    shortcut: '/images/webico.webp',
+    apple: '/images/webico.webp',
+  },
   keywords: [
     'xorazm iiv litsey',
     'iiv litsey xorazm',
