@@ -1,0 +1,10 @@
+/* Owner */
+Developer: Boboxon Jumaboyev
+Portfolio: https://boboxon2010.github.io
+GitHub: https://github.com/Boboxon2010
+Telegram: https://t.me/@Boboxon_Jumaboyev
+
+
+/* SITE */
+Last update: 2026
+Components: Python Backend, REST APIs
