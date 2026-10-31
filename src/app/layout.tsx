@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   icons: {
-    icon: '/images/webico.webp',
-    shortcut: '/images/webico.webp',
-    apple: '/images/webico.webp',
+    icon: '/images/webico.png',
+    shortcut: '/images/webico.png',
+    apple: '/images/webico.png',
   },
   keywords: [
     'xorazm iiv litsey',
