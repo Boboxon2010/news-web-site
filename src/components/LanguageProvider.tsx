@@ -204,6 +204,36 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue>({ language: 'uz', setLanguage: () => undefined });
 
+function normalizeUzbekText(value: string): string {
+  return value.replace(
+    /SH|Sh|sh|CH|Ch|ch|O['ʻʼ’]|o['ʻʼ’]|G['ʻʼ’]|g['ʻʼ’]/g,
+    (match) => ({
+      SH: 'Ş',
+      Sh: 'Ş',
+      sh: 'ş',
+      CH: 'Ç',
+      Ch: 'Ç',
+      ch: 'ç',
+      "O'": 'Ö',
+      Oʻ: 'Ö',
+      Oʼ: 'Ö',
+      "O’": 'Ö',
+      "o'": 'ö',
+      oʻ: 'ö',
+      oʼ: 'ö',
+      "o’": 'ö',
+      "G'": 'Ğ',
+      Gʻ: 'Ğ',
+      Gʼ: 'Ğ',
+      "G’": 'Ğ',
+      "g'": 'ğ',
+      gʻ: 'ğ',
+      gʼ: 'ğ',
+      "g’": 'ğ',
+    })[match] || match
+  );
+}
+
 function localizeDocument(language: SiteLanguage) {
   const normalize = (value: string) => value.replace(/[’‘`]/g, "'").replace(/\s+/g, ' ').trim();
   const reverse = new Map<string, string>();
@@ -222,7 +252,9 @@ function localizeDocument(language: SiteLanguage) {
       if (!value) continue;
       const original = reverse.get(normalize(value)) || value;
       const translated = messages[original]?.[language];
-      if (translated && translated !== value) element.setAttribute(attribute, translated);
+      const localized = translated || value;
+      const nextValue = language === 'uz' ? normalizeUzbekText(localized) : localized;
+      if (nextValue !== value) element.setAttribute(attribute, nextValue);
     }
   }
 
@@ -247,8 +279,10 @@ function localizeDocument(language: SiteLanguage) {
     const candidate = symbolPrefix?.[2]?.trim() || trimmed;
     const original = reverse.get(normalize(candidate)) || candidate;
     const translated = messages[original]?.[language];
-    if (translated && translated !== candidate) {
-      node.nodeValue = value.replace(candidate, translated);
+    const localized = translated ? value.replace(candidate, translated) : value;
+    const nextValue = language === 'uz' ? normalizeUzbekText(localized) : localized;
+    if (nextValue !== value) {
+      node.nodeValue = nextValue;
     }
   }
 
